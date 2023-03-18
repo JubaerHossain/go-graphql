@@ -1,14 +1,16 @@
 package resolver
 
 import (
-	"github.com/graphql-go/graphql"
-
+	"database/sql"
 	"user-services/database"
 	"user-services/graphql/types"
+	"user-services/utils"
+
+	"github.com/graphql-go/graphql"
 )
 
 func GetUsers(params graphql.ResolveParams) (interface{}, error) {
-	rows, err := database.DB.Query("SELECT id, name, email, password FROM users")
+	rows, err := database.DB.Query("SELECT id, name, email FROM users ORDER BY id DESC LIMIT 10")
 	if err != nil {
 		return nil, err
 	}
@@ -17,7 +19,8 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 	var users []types.User
 	for rows.Next() {
 		var user types.User
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+		var email sql.NullString
+		err := rows.Scan(&user.ID, &user.Name, &email )
 		if err != nil {
 			return nil, err
 		}
@@ -45,9 +48,10 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	var user types.User
+	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	user.Name = params.Args["name"].(string)
 	user.Email = params.Args["email"].(string)
-	user.Password = params.Args["password"].(string)
+	user.Password = hash
 
 	stmt, err := database.DB.Prepare("INSERT INTO users(name, email, password) VALUES(?, ?, ?)")
 	if err != nil {
