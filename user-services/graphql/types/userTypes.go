@@ -14,6 +14,7 @@ type User struct {
 
 var UserType = graphql.NewObject(graphql.ObjectConfig{
     Name: "User",
+	Description: "User Type",
     Fields: graphql.Fields{
         "id": &graphql.Field{
             Type: graphql.Int,
