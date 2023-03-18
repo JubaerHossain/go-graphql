@@ -15,3 +15,19 @@
 	DB_PASS := "123"
 	DB_USER := "root"
 ```
+
+# <h5> Check in queries for users </h5>
+
+```bash
+	{
+		users(page: 2, pageSize: 20) {
+			id
+			name
+			email
+		}
+	}
+
+```
+
+# screenshot 
+![](1.png)
