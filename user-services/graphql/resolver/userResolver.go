@@ -66,6 +66,9 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	user.Role = params.Args["role"].(string)
 	user.Status = params.Args["status"].(string)
 	user.CreatedAt = utils.GetTimeNow()
+
+	// fmt.Println(user)
+
 	id, err := database.INSERT("users", user)
 	if err != nil {
 		return nil, err
