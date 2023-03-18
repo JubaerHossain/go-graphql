@@ -9,7 +9,7 @@
 # <h5> go to database/database.go and set up database configure </h5>
 
 ```bash
-    DB_HOST := "localhost"
+        DB_HOST := "localhost"
 	DB_PORT := "3306"
 	DB_NAME := "go_crud"
 	DB_PASS := "123"
