@@ -7,8 +7,10 @@ import (
 type User struct {
     ID        int    `json:"id"`
     Name      string `json:"name"`
-    Email     string `json:"email"`
+    Phone     string `json:"phone"`
     Password  string `json:"password"`
+    Role      string `json:"role"`
+    Status    string `json:"status"`
     CreatedAt string `json:"created_at"`
 }
 
@@ -22,10 +24,16 @@ var UserType = graphql.NewObject(graphql.ObjectConfig{
         "name": &graphql.Field{
             Type: graphql.String,
         },
-        "email": &graphql.Field{
+        "phone": &graphql.Field{
             Type: graphql.String,
         },
         "password": &graphql.Field{
+            Type: graphql.String,
+        },
+        "role": &graphql.Field{
+            Type: graphql.String,
+        },
+        "status": &graphql.Field{
             Type: graphql.String,
         },
         "created_at": &graphql.Field{
@@ -35,4 +43,3 @@ var UserType = graphql.NewObject(graphql.ObjectConfig{
 })
 
 type Users []User
-

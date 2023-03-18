@@ -1,6 +1,7 @@
 package schema
 
 import (
+	enums "user-services/enum"
 	"user-services/graphql/resolver"
 	"user-services/graphql/types"
 
@@ -12,8 +13,8 @@ var UsersQuery = graphql.NewObject(graphql.ObjectConfig{
 	Description: "Root of all queries",
 	Fields: graphql.Fields{
 		"users": &graphql.Field{
-			Type:    graphql.NewList(types.UserType),
-			Args:   graphql.FieldConfigArgument{
+			Type: graphql.NewList(types.UserType),
+			Args: graphql.FieldConfigArgument{
 				"page": &graphql.ArgumentConfig{
 					Type: graphql.Int,
 				},
@@ -45,11 +46,17 @@ var UsersMutation = graphql.NewObject(graphql.ObjectConfig{
 				"name": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
-				"email": &graphql.ArgumentConfig{
+				"phone": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
 				"password": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
+				},
+				"role": &graphql.ArgumentConfig{
+					Type: enums.GetRoleEnumType(),
+				},
+				"status": &graphql.ArgumentConfig{
+					Type: enums.GetStatusEnumType(),
 				},
 			},
 			Resolve: resolver.CreateUser,
@@ -63,7 +70,7 @@ var UsersMutation = graphql.NewObject(graphql.ObjectConfig{
 				"name": &graphql.ArgumentConfig{
 					Type: graphql.String,
 				},
-				"email": &graphql.ArgumentConfig{
+				"phone": &graphql.ArgumentConfig{
 					Type: graphql.String,
 				},
 				"password": &graphql.ArgumentConfig{

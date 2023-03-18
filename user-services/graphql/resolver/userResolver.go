@@ -18,10 +18,10 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 	pageSize, ok := params.Args["pageSize"].(int)
 	if !ok {
 		pageSize = 10
-	}	
+	}
 	offset := (page - 1) * pageSize
 	fmt.Println(offset)
-	rows, err := database.DB.Query("SELECT id, name, email FROM users ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
+	rows, err := database.DB.Query("SELECT id, name, phone FROM users ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +30,8 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 	var users []types.User
 	for rows.Next() {
 		var user types.User
-		var email sql.NullString
-		err := rows.Scan(&user.ID, &user.Name, &email )
+		var phone sql.NullString
+		err := rows.Scan(&user.ID, &user.Name, &phone)
 		if err != nil {
 			return nil, err
 		}
@@ -45,8 +45,8 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 	id, ok := params.Args["id"].(int)
 	if ok {
 		var user types.User
-		row := database.DB.QueryRow("SELECT id, name, email, password FROM users WHERE id = ?", id)
-		err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+		row := database.DB.QueryRow("SELECT id, name, phone, password FROM users WHERE id = ?", id)
+		err := row.Scan(&user.ID, &user.Name, &user.Phone, &user.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -61,25 +61,16 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	var user types.User
 	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	user.Name = params.Args["name"].(string)
-	user.Email = params.Args["email"].(string)
+	user.Phone = params.Args["phone"].(string)
 	user.Password = hash
-
-	stmt, err := database.DB.Prepare("INSERT INTO users(name, email, password) VALUES(?, ?, ?)")
+	user.Role = params.Args["role"].(string)
+	user.Status = params.Args["status"].(string)
+	user.CreatedAt = utils.GetTimeNow()
+	id, err := database.INSERT("users", user)
 	if err != nil {
 		return nil, err
 	}
-	res, err := stmt.Exec(user.Name, user.Email, user.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	lastID, err := res.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	user.ID = int(lastID)
-
+	user.ID = int(id)
 	return user, nil
 }
 
@@ -87,14 +78,14 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	var user types.User
 	user.ID = params.Args["id"].(int)
 	user.Name = params.Args["name"].(string)
-	user.Email = params.Args["email"].(string)
+	user.Phone = params.Args["phone"].(string)
 	user.Password = params.Args["password"].(string)
 
-	stmt, err := database.DB.Prepare("UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?")
+	stmt, err := database.DB.Prepare("UPDATE users SET name = ?, phone = ?, password = ? WHERE id = ?")
 	if err != nil {
 		return nil, err
 	}
-	_, err = stmt.Exec(user.Name, user.Email, user.Password, user.ID)
+	_, err = stmt.Exec(user.Name, user.Phone, user.Password, user.ID)
 	if err != nil {
 		return nil, err
 	}
