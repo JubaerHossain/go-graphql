@@ -13,6 +13,14 @@ var UsersQuery = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields{
 		"users": &graphql.Field{
 			Type:    graphql.NewList(types.UserType),
+			Args:   graphql.FieldConfigArgument{
+				"page": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"pageSize": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+			},
 			Resolve: resolver.GetUsers,
 		},
 		"user": &graphql.Field{

@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"database/sql"
+	"fmt"
 	"user-services/database"
 	"user-services/graphql/types"
 	"user-services/utils"
@@ -10,7 +11,17 @@ import (
 )
 
 func GetUsers(params graphql.ResolveParams) (interface{}, error) {
-	rows, err := database.DB.Query("SELECT id, name, email FROM users ORDER BY id DESC LIMIT 10")
+	page, ok := params.Args["page"].(int)
+	if !ok {
+		page = 1
+	}
+	pageSize, ok := params.Args["pageSize"].(int)
+	if !ok {
+		pageSize = 10
+	}	
+	offset := (page - 1) * pageSize
+	fmt.Println(offset)
+	rows, err := database.DB.Query("SELECT id, name, email FROM users ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
 	if err != nil {
 		return nil, err
 	}
