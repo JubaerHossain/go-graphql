@@ -3,8 +3,8 @@ CREATE TABLE  IF NOT EXISTS  users (
     phone VARCHAR(20),
     name VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20),
-    status ENUM('active', 'inactive', 'blocked') NOT NULL,
+    role ENUM('ADMIN', 'USER', 'INSTRUCTOR') NOT NULL DEFAULT 'USER',
+    status ENUM('ACTIVE', 'INACTIVE', 'BLOCKED') NOT NULL DEFAULT 'ACTIVE',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS courses(
     name VARCHAR(255) NOT NULL,
     user_id INT NOT NULL,
     description VARCHAR(255) NOT NULL,
-    status ENUM('active', 'inactive', 'blocked') NOT NULL,
+    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS lessons(
     course_id INT NOT NULL,
     video VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
-    status ENUM('active', 'inactive', 'blocked') NOT NULL,
+    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS enrollment(
     id INT PRIMARY KEY auto_increment,
     user_id INT NOT NULL,
     course_id INT NOT NULL,
-    status ENUM('active', 'inactive', 'blocked') NOT NULL,
+    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS quiz(
     lesson_id INT NOT NULL,
     question VARCHAR(255) NOT NULL,
     answer VARCHAR(255) NOT NULL,
-    status ENUM('active', 'inactive', 'blocked') NOT NULL,
+    status ENUM('ACTIVE', 'INACTIVE') NOT NULL DEFAULT 'ACTIVE',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
 );

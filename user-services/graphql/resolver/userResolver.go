@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"user-services/database"
 	"user-services/graphql/types"
@@ -76,23 +77,28 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	return user, nil
 }
 
+
 func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	var user types.User
+	fmt.Println(params.Args)
 	user.ID = params.Args["id"].(int)
 	user.Name = params.Args["name"].(string)
 	user.Phone = params.Args["phone"].(string)
-	user.Password = params.Args["password"].(string)
+	
+	update, err := database.UPDATE("users", user, "id=?", user.ID)
+	if err != nil {
+		return nil, errors.New("update user failed")
+        return nil, err
+    }
 
-	stmt, err := database.DB.Prepare("UPDATE users SET name = ?, phone = ?, password = ? WHERE id = ?")
+	fmt.Println("update")
+	fmt.Println(update)
+
+	updatedUser, err := database.FindByID("users", user.ID)
 	if err != nil {
 		return nil, err
 	}
-	_, err = stmt.Exec(user.Name, user.Phone, user.Password, user.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return updatedUser, nil
 }
 
 func DeleteUser(params graphql.ResolveParams) (interface{}, error) {

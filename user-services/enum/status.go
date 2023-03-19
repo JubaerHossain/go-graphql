@@ -11,6 +11,9 @@ var statusEnumType = graphql.NewEnum(graphql.EnumConfig{
 		"INACTIVE": &graphql.EnumValueConfig{
 			Value: "INACTIVE",
 		},
+		"BLOCKED": &graphql.EnumValueConfig{
+			Value: "BLOCKED",
+		},
 	},
 	Description: "Status of the user",
 })

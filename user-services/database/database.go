@@ -39,6 +39,22 @@ func Connect() {
 	fmt.Println("Connected to database!")
 }
 
+func Query(query string, args ...interface{}) (*sql.Rows, error) {
+	rows, err := DB.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
+func Exec(query string, args ...interface{}) (sql.Result, error) {
+	res, err := DB.Exec(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func INSERT(tableName string, data interface{}) (int64, error) {
 	// Get the type and value of the data parameter
 	dataType, dataValue := reflect.TypeOf(data), reflect.ValueOf(data)
@@ -116,6 +132,7 @@ func INSERT(tableName string, data interface{}) (int64, error) {
 
 func UPDATE(tableName string, data interface{}, where string, args ...interface{}) (int64, error) {
 	// Get the type and value of the data parameter
+
 	dataType, dataValue := reflect.TypeOf(data), reflect.ValueOf(data)
 
 	// Determine if the data parameter is a struct or map
@@ -163,12 +180,16 @@ func UPDATE(tableName string, data interface{}, where string, args ...interface{
 	// Generate the SQL statement
 	sql := buf.String()
 
+	fmt.Println(sql)
+
 	// Use prepared statement to execute the statement
 	stmt, err := DB.Prepare(sql)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
+
+	fmt.Println(args)
 
 	res, err := stmt.Exec(args...)
 	if err != nil {
@@ -228,18 +249,6 @@ func SELECT(tableName string, where string, args ...interface{}) (*sql.Rows, err
 	return rows, nil
 }
 
-func Query(query string, args ...interface{}) (*sql.Rows, error) {
-	rows, err := DB.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	return rows, nil
-}
-
-func Exec(query string, args ...interface{}) (sql.Result, error) {
-	res, err := DB.Exec(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+func FindByID(tableName string, id int) (*sql.Rows, error) {
+	return SELECT(tableName, "id=?", id)
 }

@@ -68,13 +68,10 @@ var UsersMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.NewNonNull(graphql.Int),
 				},
 				"name": &graphql.ArgumentConfig{
-					Type: graphql.String,
+					Type: graphql.NewNonNull(graphql.String),
 				},
 				"phone": &graphql.ArgumentConfig{
-					Type: graphql.String,
-				},
-				"password": &graphql.ArgumentConfig{
-					Type: graphql.String,
+					Type: graphql.NewNonNull(graphql.String),
 				},
 			},
 			Resolve: resolver.UpdateUser,
