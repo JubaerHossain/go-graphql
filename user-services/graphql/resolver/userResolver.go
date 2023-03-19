@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"user-services/database"
 	"user-services/graphql/types"
+	"user-services/query"
 	"user-services/utils"
 
 	"github.com/graphql-go/graphql"
@@ -77,28 +78,31 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	return user, nil
 }
 
-
 func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
-	var user types.User
-	fmt.Println(params.Args)
-	user.ID = params.Args["id"].(int)
-	user.Name = params.Args["name"].(string)
-	user.Phone = params.Args["phone"].(string)
-	
-	update, err := database.UPDATE("users", user, "id=?", user.ID)
-	if err != nil {
-		return nil, errors.New("update user failed")
-        return nil, err
-    }
-
-	fmt.Println("update")
-	fmt.Println(update)
-
-	updatedUser, err := database.FindByID("users", user.ID)
-	if err != nil {
-		return nil, err
+	forms := map[string]interface{}{
+		"name":  params.Args["name"],
+		"phone": params.Args["phone"],
 	}
-	return updatedUser, nil
+	forms["table"] = "users"
+	forms["id"] = params.Args["id"].(int)
+	err := query.Update(forms, database.DB)
+	if err != nil {
+		fmt.Println(err)
+		return nil, errors.New("update user failed")
+	}
+	id, ok := params.Args["id"].(int)
+	if ok {
+		var user types.User
+		row := database.DB.QueryRow("SELECT id, name, phone, role FROM users WHERE id = ?", id)
+		err := row.Scan(&user.ID, &user.Name, &user.Phone, &user.Role)
+		if err != nil {
+			return nil, err
+		}
+
+		return user, nil
+	}
+
+	return nil, nil
 }
 
 func DeleteUser(params graphql.ResolveParams) (interface{}, error) {

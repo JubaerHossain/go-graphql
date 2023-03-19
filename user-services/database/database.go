@@ -130,10 +130,15 @@ func INSERT(tableName string, data interface{}) (int64, error) {
 	return id, nil
 }
 
-func UPDATE(tableName string, data interface{}, where string, args ...interface{}) (int64, error) {
+func UPDATE(tableName string, data map[string]interface{}, where string, args ...interface{}) (int64, error) {
 	// Get the type and value of the data parameter
 
 	dataType, dataValue := reflect.TypeOf(data), reflect.ValueOf(data)
+
+	fmt.Println("dataValue")
+	fmt.Println(dataValue)
+	fmt.Println("dataType")
+	fmt.Println(dataType)
 
 	// Determine if the data parameter is a struct or map
 	var isMap bool
@@ -174,13 +179,14 @@ func UPDATE(tableName string, data interface{}, where string, args ...interface{
 		}
 	}
 
+	fmt.Println("fields")
+	fmt.Println(fields)
+
 	buf.WriteString(strings.Join(fields, ","))
 	buf.WriteString(" WHERE " + where)
 
 	// Generate the SQL statement
 	sql := buf.String()
-
-	fmt.Println(sql)
 
 	// Use prepared statement to execute the statement
 	stmt, err := DB.Prepare(sql)
@@ -188,8 +194,6 @@ func UPDATE(tableName string, data interface{}, where string, args ...interface{
 		return 0, err
 	}
 	defer stmt.Close()
-
-	fmt.Println(args)
 
 	res, err := stmt.Exec(args...)
 	if err != nil {
@@ -201,6 +205,11 @@ func UPDATE(tableName string, data interface{}, where string, args ...interface{
 	if err != nil {
 		return 0, err
 	}
+
+	fmt.Println(sql)
+	fmt.Println(args)
+	fmt.Println(rows)
+
 
 	return rows, nil
 }
@@ -249,6 +258,6 @@ func SELECT(tableName string, where string, args ...interface{}) (*sql.Rows, err
 	return rows, nil
 }
 
-func FindByID(tableName string, id int) (*sql.Rows, error) {
+func FindByID(tableName string, id int64) (*sql.Rows, error) {
 	return SELECT(tableName, "id=?", id)
 }
