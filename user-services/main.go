@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/graphql-go/handler"
@@ -19,11 +18,19 @@ func main() {
 	h := handler.New(&handler.Config{
 		Schema:   &schema.UsersSchema,
 		Pretty:   true,
-		GraphiQL: true,
+		GraphiQL: false,
+		Playground: true,
+
 	})
 
 	http.Handle("/graphql", h)
+
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("static"))))
+
 	fmt.Println("Server is running on port 8080")
 	fmt.Println("Access GraphiQL at http://localhost:8080/graphql")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	http.ListenAndServe(":8080", nil)
+
+
 }
