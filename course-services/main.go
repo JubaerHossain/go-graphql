@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/graphql-go/handler"
 
-	"user-services/database"
-	"user-services/graphql/schema"
+	"course-services/database"
+	"course-services/graphql/schema"
 )
 
 func main() {
@@ -17,13 +16,18 @@ func main() {
 	database.Connect()
 
 	h := handler.New(&handler.Config{
-		Schema:   &schema.UsersSchema,
-		Pretty:   true,
-		GraphiQL: true,
+		Schema: &schema.CourseSchema,
+		Pretty: true,
+		Playground: false,
 	})
 
+
 	http.Handle("/graphql", h)
-	fmt.Println("Server is running on port 8080")
-	fmt.Println("Access GraphiQL at http://localhost:8080/graphql")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("static"))))
+
+	fmt.Println("Server is running on port 8081")
+	fmt.Println("Access GraphiQL at http://localhost:8081/graphql")
+
+	http.ListenAndServe(":8081", nil)
 }

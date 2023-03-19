@@ -1,7 +1,6 @@
 package resolver
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"user-services/database"
@@ -23,7 +22,7 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 	}
 	offset := (page - 1) * pageSize
 	fmt.Println(offset)
-	rows, err := database.DB.Query("SELECT id, name, phone FROM users ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
+	rows, err := database.DB.Query("SELECT * FROM users ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -32,8 +31,7 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 	var users []types.User
 	for rows.Next() {
 		var user types.User
-		var phone sql.NullString
-		err := rows.Scan(&user.ID, &user.Name, &phone)
+		err := rows.Scan(&user.ID, &user.Name, &user.Phone, &user.Status, &user.Role, &user.Password, &user.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +68,7 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	user.CreatedAt = utils.GetTimeNow()
 	// fmt.Println(user)
 
-	id, err := database.INSERT("users", user)
+	id, err := query.Insert("users", user, database.DB)
 	if err != nil {
 		return nil, err
 	}

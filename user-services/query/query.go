@@ -1,9 +1,11 @@
 package query
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -66,4 +68,79 @@ func Update(form map[string]interface{}, db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func Insert(tableName string, data interface{}, db *sql.DB) (int64, error) {
+	// Get the type and value of the data parameter
+	dataType, dataValue := reflect.TypeOf(data), reflect.ValueOf(data)
+
+	// Determine if the data parameter is a struct or map
+	var isMap bool
+	if dataType.Kind() == reflect.Map {
+		isMap = true
+	} else if dataType.Kind() == reflect.Struct {
+		isMap = false
+	} else {
+		return 0, fmt.Errorf("data parameter must be a struct or map[string]interface{}")
+	}
+
+	// Cache the type information
+	var buf bytes.Buffer
+	if isMap {
+		dataType = reflect.TypeOf(map[string]interface{}{})
+		buf.WriteString("INSERT INTO " + tableName + " (")
+	} else {
+		buf.WriteString("INSERT INTO " + tableName + " (")
+		dataType = reflect.TypeOf(data)
+	}
+
+	// Iterate over the fields of the data parameter and generate the SQL statement
+	var fields []string
+	var values []string
+	var args []interface{}
+	for i := 0; i < dataType.NumField(); i++ {
+		field := dataType.Field(i)
+		fieldName := field.Name
+
+		var fieldValue reflect.Value
+		if isMap {
+			fieldValue = dataValue.MapIndex(reflect.ValueOf(fieldName))
+		} else {
+			fieldValue = dataValue.Field(i)
+		}
+
+		if fieldValue.IsValid() && fieldValue.Interface() != nil {
+			fields = append(fields, fieldName)
+			values = append(values, "?")
+			args = append(args, fieldValue.Interface())
+		}
+	}
+
+	buf.WriteString(strings.Join(fields, ","))
+	buf.WriteString(") VALUES (")
+	buf.WriteString(strings.Join(values, ","))
+	buf.WriteString(")")
+
+	// Generate the SQL statement
+	sql := buf.String()
+
+	// Use prepared statement to execute the statement
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(args...)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the ID of the inserted row
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }

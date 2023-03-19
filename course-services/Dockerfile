@@ -3,7 +3,7 @@ FROM golang:1.20
 # create a directory for the app
 
 # Set the Current Working Directory inside the container
-WORKDIR /user-services
+WORKDIR /course-services
 
 # copy the source code as the last step
 
@@ -14,10 +14,10 @@ RUN go mod download
 
 # build the binary
 
-RUN go build -o user-services .
+RUN go build -o course-services .
 
 # our start command which kicks off
 
 EXPOSE 8080
 
-CMD [ "/user-services" ]
+CMD [ "/course-services" ]

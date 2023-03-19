@@ -1,4 +1,4 @@
-module user-services
+module course-services
 
 go 1.20
 

@@ -11,7 +11,7 @@ type User struct {
     Password  string `json:"password"`
     Role      string `json:"role"`
     Status    string `json:"status"`
-    CreatedAt string `json:"created_at"`
+    CreatedAt string `json:"createdAt"`
 }
 
 var UserType = graphql.NewObject(graphql.ObjectConfig{
@@ -36,7 +36,7 @@ var UserType = graphql.NewObject(graphql.ObjectConfig{
         "status": &graphql.Field{
             Type: graphql.String,
         },
-        "created_at": &graphql.Field{
+        "createdAt": &graphql.Field{
             Type: graphql.DateTime,
         },
     },
