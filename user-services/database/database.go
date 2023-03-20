@@ -17,7 +17,7 @@ func Connect() {
 	DB_HOST := "localhost"
 	DB_PORT := "3306"
 	DB_NAME := "go_crud"
-	DB_PASS := "123"
+	DB_PASS := "password"
 	DB_USER := "root"
 
 	dsn := DB_USER + ":" + DB_PASS + "@tcp(" + DB_HOST + ":" + DB_PORT + ")/" + DB_NAME + "?charset=utf8mb4&parseTime=True&loc=Local"

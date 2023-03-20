@@ -5,12 +5,12 @@ import (
 )
 
 type Course struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	UserID      *string `json:"user_id,omitempty"`
-	Status      string  `json:"status"`
-	CreatedAt   string  `json:"createdAt"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	User_id     int    `json:"user_id"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 var CourseType = graphql.NewObject(graphql.ObjectConfig{
@@ -27,7 +27,7 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.String,
 		},
 		"user_id": &graphql.Field{
-			Type: graphql.String,
+			Type: graphql.Int,
 		},
 		"status": &graphql.Field{
 			Type: graphql.String,

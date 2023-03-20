@@ -18,6 +18,7 @@ func main() {
 	h := handler.New(&handler.Config{
 		Schema: &schema.CourseSchema,
 		Pretty: true,
+		GraphiQL: false,
 		Playground: false,
 	})
 
@@ -27,7 +28,7 @@ func main() {
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("static"))))
 
 	fmt.Println("Server is running on port 8081")
-	fmt.Println("Access GraphiQL at http://localhost:8081/graphql")
+	fmt.Println("Access GraphiQL at http://localhost:8081")
 
 	http.ListenAndServe(":8081", nil)
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-var CourseQuery = graphql.NewObject(graphql.ObjectConfig{
-	Name:        "Course Query",
+var CoursesQuery = graphql.NewObject(graphql.ObjectConfig{
+	Name:        "CourseQuery",
 	Description: "Root of all queries",
 	Fields: graphql.Fields{
 		"courses": &graphql.Field{
@@ -32,8 +32,8 @@ var CourseQuery = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var CourseMutation = graphql.NewObject(graphql.ObjectConfig{
-	Name:        "Mutation",
+var CoursesMutation = graphql.NewObject(graphql.ObjectConfig{
+	Name:        "CourseMutation",
 	Description: "Root of all mutations",
 	Fields: graphql.Fields{
 		"createCourse": &graphql.Field{
@@ -46,7 +46,7 @@ var CourseMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
 				"user_id": &graphql.ArgumentConfig{
-					Type: graphql.NewNonNull(graphql.String),
+					Type: graphql.NewNonNull(graphql.Int),
 				},
 				"status": &graphql.ArgumentConfig{
 					Type: enums.GetStatusEnumType(),
@@ -85,6 +85,6 @@ var CourseMutation = graphql.NewObject(graphql.ObjectConfig{
 })
 
 var CourseSchema, _ = graphql.NewSchema(graphql.SchemaConfig{
-	Query:    CourseQuery,
-	Mutation: CourseMutation,
+	Query:    CoursesQuery,
+	Mutation: CoursesMutation,
 })

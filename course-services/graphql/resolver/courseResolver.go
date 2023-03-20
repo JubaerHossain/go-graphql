@@ -60,28 +60,28 @@ func GetCourse(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func CreateCourse(params graphql.ResolveParams) (interface{}, error) {
-	forms := map[string]interface{}{
-		"name":        params.Args["name"],
-		"description": params.Args["description"],
-		"user_id":     params.Args["user_id"],
-		"status":      params.Args["status"],
-		"createdAt":   utils.GetTimeNow(),
-	}
-	forms["table"] = "courses" // fmt.Println(user)
-
-	id, err := query.Insert(forms, database.DB)
-	if err == nil {
+	var course types.Course
+	course.Name = params.Args["name"].(string)
+	course.Description = params.Args["description"].(string)
+	course.User_id = params.Args["user_id"].(int)
+	course.Status = params.Args["status"].(string)
+	course.CreatedAt = utils.GetTimeNow()
+	fmt.Println(course)
+	// forms["table"] = "courses"
+	// fmt.Println(forms)
+	id, err := query.Insert("courses", course, database.DB)
+	if err != nil {
 		return nil, err
-	}
-	forms["id"] = id
-	return forms, nil
+	}	
+	course.ID = int(id)
+	return course, nil
 }
 
 func UpdateCourse(params graphql.ResolveParams) (interface{}, error) {
 	forms := map[string]interface{}{
 		"name":        params.Args["name"],
 		"description": params.Args["description"],
-		"status": params.Args["status"],
+		"status":      params.Args["status"],
 	}
 	forms["table"] = "courses"
 	forms["id"] = params.Args["id"].(int)

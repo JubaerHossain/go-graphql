@@ -1,9 +1,11 @@
 package query
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -68,38 +70,77 @@ func Update(form map[string]interface{}, db *sql.DB) error {
 	return nil
 }
 
-func Insert(form map[string]interface{}, db *sql.DB) (int64, error) {
+func Insert(tableName string, data interface{}, db *sql.DB) (int64, error) {
+	// Get the type and value of the data parameter
+	dataType, dataValue := reflect.TypeOf(data), reflect.ValueOf(data)
 
-	table := form["table"].(string)
-	if table == "" {
-		return 0, errors.New("table is missing")
+	// Determine if the data parameter is a struct or map
+	var isMap bool
+	if dataType.Kind() == reflect.Map {
+		isMap = true
+	} else if dataType.Kind() == reflect.Struct {
+		isMap = false
+	} else {
+		return 0, fmt.Errorf("data parameter must be a struct or map[string]interface{}")
 	}
 
-	// value insert
-	var valueInsert []string
-	for key, val := range form {
-		if key != "id" && key != "table" {
-			valueInsert = append(valueInsert, fmt.Sprintf("'%s'", val))
+	// Cache the type information
+	var buf bytes.Buffer
+	if isMap {
+		dataType = reflect.TypeOf(map[string]interface{}{})
+		buf.WriteString("INSERT INTO " + tableName + " (")
+	} else {
+		buf.WriteString("INSERT INTO " + tableName + " (")
+		dataType = reflect.TypeOf(data)
+	}
+
+	// Iterate over the fields of the data parameter and generate the SQL statement
+	var fields []string
+	var values []string
+	var args []interface{}
+	for i := 0; i < dataType.NumField(); i++ {
+		field := dataType.Field(i)
+		fieldName := field.Name
+
+		var fieldValue reflect.Value
+		if isMap {
+			fieldValue = dataValue.MapIndex(reflect.ValueOf(fieldName))
+		} else {
+			fieldValue = dataValue.Field(i)
+		}
+
+		if fieldValue.IsValid() && fieldValue.Interface() != nil {
+			fields = append(fields, fieldName)
+			values = append(values, "?")
+			args = append(args, fieldValue.Interface())
 		}
 	}
 
-	// query
+	buf.WriteString(strings.Join(fields, ","))
+	buf.WriteString(") VALUES (")
+	buf.WriteString(strings.Join(values, ","))
+	buf.WriteString(")")
 
-	query := fmt.Sprintf("INSERT INTO %s VALUES (NULL, %s)", table, strings.Join(valueInsert, ", "))
-	// execute query
+	// Generate the SQL statement
+	sql := buf.String()
 
-	_, err := db.Exec(query)
+	// Use prepared statement to execute the statement
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(args...)
 	if err != nil {
 		return 0, err
 	}
 
-	// get last insert id
-	var lastInsertID int64
-	err = db.QueryRow("SELECT LAST_INSERT_ID()").Scan(&lastInsertID)
+	// Get the ID of the inserted row
+	id, err := res.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
 
-	return lastInsertID, nil
-
+	return id, nil
 }
