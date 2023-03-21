@@ -7,8 +7,8 @@ import (
 type Course struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
-	Description string `json:"description"`
 	User_id     int    `json:"user_id"`
+	Description string `json:"description"`
 	Status      string `json:"status"`
 	CreatedAt   string `json:"createdAt"`
 }

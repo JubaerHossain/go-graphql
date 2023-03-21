@@ -19,7 +19,7 @@ func main() {
 		Schema:   &schema.UsersSchema,
 		Pretty:   true,
 		GraphiQL: false,
-		Playground: true,
+		Playground: false,
 
 	})
 
@@ -28,7 +28,7 @@ func main() {
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("static"))))
 
 	fmt.Println("Server is running on port 8080")
-	fmt.Println("Access GraphiQL at http://localhost:8080/graphql")
+	fmt.Println("Access GraphiQL at http://localhost:8080")
 
 	http.ListenAndServe(":8080", nil)
 

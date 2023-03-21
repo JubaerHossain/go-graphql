@@ -6,8 +6,8 @@ import (
 
 type User struct {
     ID        int    `json:"id"`
-    Name      string `json:"name"`
     Phone     string `json:"phone"`
+    Name      string `json:"name"`
     Password  string `json:"password"`
     Role      string `json:"role"`
     Status    string `json:"status"`

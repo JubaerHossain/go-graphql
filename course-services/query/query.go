@@ -7,7 +7,16 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/graphql-go/graphql/language/ast"
 )
+
+type mapStringScan struct {
+	cp       []interface{}
+	row      map[string]string
+	colCount int
+	colNames []string
+}
 
 func Select(tableName string, data map[string]interface{}, where string, id int, db *sql.DB) (*sql.Rows, error) {
 	// Generate the SQL statement
@@ -143,4 +152,89 @@ func Insert(tableName string, data interface{}, db *sql.DB) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func TableFields(FieldASTs []*ast.Field) map[string]interface{} {
+
+	var fields = make(map[string]interface{})
+	for _, val := range FieldASTs {
+		var cols []string
+		for _, sel := range val.SelectionSet.Selections {
+			field, ok := sel.(*ast.Field)
+			if ok {
+				if field.Name.Kind == "Name" {
+					cols = append(cols, field.Name.Value)
+				}
+			}
+		}
+		fields[val.Name.Value] = cols
+	}
+	return fields
+}
+
+
+func newMapStringScan(columnNames []string) *mapStringScan {
+	lenCN := len(columnNames)
+	s := &mapStringScan{
+		cp:       make([]interface{}, lenCN),
+		row:      make(map[string]string, lenCN),
+		colCount: lenCN,
+		colNames: columnNames,
+	}
+	for i := 0; i < lenCN; i++ {
+		s.cp[i] = new(sql.RawBytes)
+	}
+	return s
+}
+
+func (s *mapStringScan) Update(rows *sql.Rows) error {
+	if err := rows.Scan(s.cp...); err != nil {
+		return err
+	}
+
+	for i := 0; i < s.colCount; i++ {
+		if rb, ok := s.cp[i].(*sql.RawBytes); ok {
+			s.row[s.colNames[i]] = string(*rb)
+			*rb = nil // reset pointer to discard current value to avoid a bug
+		} else {
+			return fmt.Errorf("Cannot convert index %d column %s to type *sql.RawBytes", i, s.colNames[i])
+		}
+	}
+	return nil
+}
+
+func (s *mapStringScan) Get() map[string]string {
+	return s.row
+}
+
+func GetAllRowsByQuery(sql string, db *sql.DB) ([]map[string]interface{}, error) {
+
+	rows, err := db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	columnNames, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	rc := newMapStringScan(columnNames)
+	tableData := make([]map[string]interface{}, 0)
+
+	for rows.Next() {
+
+		err := rc.Update(rows)
+		if err != nil {
+			break
+		}
+		cv := rc.Get()
+		dd := make(map[string]interface{})
+		for _, col := range columnNames {
+			dd[col] = cv[col]
+		}
+		tableData = append(tableData, dd)
+	}
+	return tableData, nil
 }

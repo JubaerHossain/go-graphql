@@ -5,9 +5,9 @@ import (
 	"course-services/graphql/types"
 	"course-services/query"
 	"course-services/utils"
-	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/graphql-go/graphql"
 )
@@ -22,25 +22,21 @@ func GetCourses(params graphql.ResolveParams) (interface{}, error) {
 		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	fmt.Println(offset)
-	rows, err := database.DB.Query("SELECT id, name, description FROM courses ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
+	colmap := query.TableFields(params.Info.FieldASTs)
+	funclabel := fmt.Sprint(params.Info.Path.Key)
+	cols := colmap[funclabel].([]string) //
+	selectColumn := strings.Join(cols, ",")
+	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "courses", pageSize, offset)
+	fmt.Println(sql)
+	rows, err := query.GetAllRowsByQuery(sql, database.DB)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var courses []types.Course
-	for rows.Next() {
-		var course types.Course
-		var description sql.NullString
-		err := rows.Scan(&course.ID, &course.Name, &description)
-		if err != nil {
-			return nil, err
-		}
-		courses = append(courses, course)
+	if len(rows) == 1 {
+		return rows[0], nil
 	}
-
-	return courses, nil
+	return nil, errors.New("No data found")
 }
 
 func GetCourse(params graphql.ResolveParams) (interface{}, error) {
@@ -60,6 +56,16 @@ func GetCourse(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func CreateCourse(params graphql.ResolveParams) (interface{}, error) {
+	fmt.Println(params.Source, params.Args, params.Info.VariableValues, params.Info.FieldASTs)
+	funclabel := params.Info.Path.Key.(string)
+	colmap := query.TableFields(params.Info.FieldASTs)
+	cols := colmap[funclabel].([]string)
+	id := params.Args["id"]
+
+	selectColumn := strings.Join(cols, ",")
+	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id='%v';", selectColumn, "account", id)
+	fmt.Println(sql)
+	return nil, nil
 	var course types.Course
 	course.Name = params.Args["name"].(string)
 	course.Description = params.Args["description"].(string)
@@ -72,8 +78,8 @@ func CreateCourse(params graphql.ResolveParams) (interface{}, error) {
 	id, err := query.Insert("courses", course, database.DB)
 	if err != nil {
 		return nil, err
-	}	
-	course.ID = int(id)
+	}
+	// course.ID = int(id)
 	return course, nil
 }
 

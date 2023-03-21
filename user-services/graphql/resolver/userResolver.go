@@ -31,10 +31,11 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 	var users []types.User
 	for rows.Next() {
 		var user types.User
-		err := rows.Scan(&user.ID, &user.Name, &user.Phone, &user.Status, &user.Role, &user.Password, &user.CreatedAt)
+		err := rows.Scan(&user.ID, &user.Phone, &user.Name, &user.Password,  &user.Role, &user.Status,  &user.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(user)
 		users = append(users, user)
 	}
 
