@@ -2,7 +2,7 @@ package main
 
 import (
 	"lms/database"
-	"lms/enums/server"
+	"lms/server"
 )
 
 func main() {
