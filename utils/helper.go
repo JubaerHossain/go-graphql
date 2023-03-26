@@ -19,3 +19,14 @@ func CheckPasswordHash(password, hash string) bool {
 func GetTimeNow() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
+
+
+func CreateJwtToken(id int, role string) (string, error) {
+	claims := jwt.MapClaims{}
+	claims["authorized"] = true
+	claims["id"] = id
+	claims["role"] = role
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
+}

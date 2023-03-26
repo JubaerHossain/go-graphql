@@ -27,18 +27,15 @@ func GetCourses(params graphql.ResolveParams) (interface{}, error) {
 	cols := colmap[funclabel].([]string) //
 	selectColumn := strings.Join(cols, ",")
 	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "courses", pageSize, offset)
-	fmt.Println(sql)
 	rows, err := query.GetAllRowsByQuery(sql, database.DB)
 	if err != nil {
-		fmt.Println("error from get from query")
-		fmt.Println(err)
 		return nil, err
 	}
 
 	if len(rows) == 1 {
 		return rows[0], nil
 	}
-	return nil, errors.New("No data found")
+	return nil, errors.New("no data found")
 }
 
 func GetCourse(params graphql.ResolveParams) (interface{}, error) {

@@ -7,6 +7,7 @@ import (
 	"lms/graphql/types"
 	"lms/query"
 	"lms/utils"
+	"strings"
 
 	"github.com/graphql-go/graphql"
 )
@@ -21,25 +22,22 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	fmt.Println(offset)
-	rows, err := database.DB.Query("SELECT * FROM users ORDER BY id DESC LIMIT ? OFFSET ?", pageSize, offset)
+	colmap := query.TableFields(params.Info.FieldASTs)
+	funclabel := fmt.Sprint(params.Info.Path.Key)
+	cols := colmap[funclabel].([]string) //
+	selectColumn := strings.Join(cols, ",")
+	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "users", pageSize, offset)
+
+	fmt.Println(sql)
+	rows, err := query.GetAllRowsByQuery(sql, database.DB)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var users []types.User
-	for rows.Next() {
-		var user types.User
-		err := rows.Scan(&user.ID, &user.Phone, &user.Name, &user.Password, &user.Role, &user.Status, &user.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println(user)
-		users = append(users, user)
+	if len(rows) == 1 {
+		return rows[0], nil
 	}
-
-	return users, nil
+	return nil, errors.New("no data found")
 }
 
 func GetUser(params graphql.ResolveParams) (interface{}, error) {
