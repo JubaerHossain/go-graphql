@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"lms/config"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -14,11 +15,11 @@ var DB *sql.DB
 func Connect() {
 	var err error
 
-	DB_HOST := "localhost"
-	DB_PORT := "3306"
-	DB_NAME := "go_crud"
-	DB_PASS := "password"
-	DB_USER := "root"
+	DB_HOST := config.Env("DB_HOST")
+	DB_PORT := config.Env("DB_PORT")
+	DB_NAME := config.Env("DB_DATABASE")
+	DB_PASS := config.Env("DB_PASSWORD")
+	DB_USER := config.Env("DB_USERNAME")
 
 	dsn := DB_USER + ":" + DB_PASS + "@tcp(" + DB_HOST + ":" + DB_PORT + ")/" + DB_NAME + "?charset=utf8mb4&parseTime=True&loc=Local"
 	DB, err = sql.Open("mysql", dsn)

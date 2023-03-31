@@ -2,7 +2,7 @@ package utils
 
 import (
 	"time"
-
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,11 +22,10 @@ func GetTimeNow() string {
 
 
 func CreateJwtToken(id int, role string) (string, error) {
-	claims := jwt.MapClaims{}
-	claims["authorized"] = true
-	claims["id"] = id
-	claims["role"] = role
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":   id,
+		"role": role,
+	}).SignedString([]byte("secret"))
+
+	
 }
