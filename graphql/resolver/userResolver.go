@@ -7,7 +7,6 @@ import (
 	"lms/graphql/types"
 	"lms/query"
 	"lms/utils"
-	"strings"
 
 	"github.com/graphql-go/graphql"
 )
@@ -22,22 +21,22 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	colmap := query.TableFields(params.Info.FieldASTs)
-	funclabel := fmt.Sprint(params.Info.Path.Key)
-	cols := colmap[funclabel].([]string) //
-	selectColumn := strings.Join(cols, ",")
+	selectColumn := query.GetColumns(params)
 	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "users", pageSize, offset)
 
-	fmt.Println(sql)
-	rows, err := query.GetAllRowsByQuery(sql, database.DB)
+	rows, err := query.Query(sql, database.DB)
 	if err != nil {
 		return nil, err
 	}
 
+	data := make(map[string]interface{})
 	if len(rows) == 1 {
-		return rows[0], nil
+		data = rows[0]
 	}
-	return nil, errors.New("no data found")
+	if len(rows) == 0 {
+		return nil, errors.New("no data found")
+	}
+	return data, nil
 }
 
 func GetUser(params graphql.ResolveParams) (interface{}, error) {

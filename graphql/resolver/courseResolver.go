@@ -7,7 +7,7 @@ import (
 	"lms/graphql/types"
 	"lms/query"
 	"lms/utils"
-	"strings"
+	"strconv"
 
 	"github.com/graphql-go/graphql"
 )
@@ -22,20 +22,24 @@ func GetCourses(params graphql.ResolveParams) (interface{}, error) {
 		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	colmap := query.TableFields(params.Info.FieldASTs)
-	funclabel := fmt.Sprint(params.Info.Path.Key)
-	cols := colmap[funclabel].([]string) //
-	selectColumn := strings.Join(cols, ",")
+	selectColumn := query.GetColumns(params)
 	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "courses", pageSize, offset)
-	rows, err := query.GetAllRowsByQuery(sql, database.DB)
+
+	rows, err := query.Query(sql, database.DB)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(rows) == 1 {
-		return rows[0], nil
+	if len(rows) > 1 {
+		obj := make(map[string]interface{})
+		for key, val := range rows {
+			obj[strconv.Itoa(key)] = val
+		}
+		return obj, nil
 	}
+
 	return nil, errors.New("no data found")
+
 }
 
 func GetCourse(params graphql.ResolveParams) (interface{}, error) {

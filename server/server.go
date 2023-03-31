@@ -5,6 +5,7 @@ import (
 	"lms/graphql/schema"
 	"lms/routes"
 	"net/http"
+	"os"
 
 	"lms/database"
 
@@ -20,14 +21,17 @@ func Start() {
 		Schema:     &schema.Schema,
 		Pretty:     true,
 		GraphiQL:   false,
-		Playground: false,
+		Playground: true,
 	})
 
-	http.Handle("/graphql", h)
-	http.Handle("/query", http.StripPrefix("/query", http.FileServer(http.Dir("static"))))
-	routes.Init()
-	fmt.Println("Server is running on port 8081")
-	fmt.Println("Access GraphiQL at http://localhost:8081/query")
+	APP_PORT := os.Getenv("APP_PORT")
+	APP_URL := os.Getenv("APP_URL")
 
-	http.ListenAndServe(":8081", nil)
+	http.Handle("/graphql", h)
+	routes.Init()
+	fmt.Println("Server is running on port " + APP_PORT)
+	fmt.Println("Access GraphiQL at " + APP_URL + ":" + APP_PORT + "/graphql")
+
+	http.ListenAndServe(":"+APP_PORT, nil)
+
 }

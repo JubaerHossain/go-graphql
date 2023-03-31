@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 )
 
@@ -16,26 +17,6 @@ type mapStringScan struct {
 	row      map[string]string
 	colCount int
 	colNames []string
-}
-
-func Select(tableName string, data map[string]interface{}, where string, id int, db *sql.DB) (*sql.Rows, error) {
-	// Generate the SQL statement
-	fmt.Println(data)
-	sql := "SELECT * FROM " + tableName + " WHERE " + where
-
-	// Use prepared statement to execute the statement
-	stmt, err := db.Prepare(sql)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return rows, nil
 }
 
 func RowExistsByID(table string, id int64, db *sql.DB) bool {
@@ -172,7 +153,6 @@ func TableFields(FieldASTs []*ast.Field) map[string]interface{} {
 	return fields
 }
 
-
 func newMapStringScan(columnNames []string) *mapStringScan {
 	lenCN := len(columnNames)
 	s := &mapStringScan{
@@ -207,7 +187,30 @@ func (s *mapStringScan) Get() map[string]string {
 	return s.row
 }
 
-func GetAllRowsByQuery(sql string, db *sql.DB) ([]map[string]interface{}, error) {
+func GetColumns(params graphql.ResolveParams) string {
+	fieldASTs := params.Info.FieldASTs
+	var fields = make(map[string]interface{})
+	for _, val := range fieldASTs {
+		var cols []string
+		for _, sel := range val.SelectionSet.Selections {
+			field, ok := sel.(*ast.Field)
+			if ok {
+				if field.Name.Kind == "Name" {
+					cols = append(cols, field.Name.Value)
+				}
+			}
+		}
+		fields[val.Name.Value] = cols
+	}
+
+	funclabel := fmt.Sprint(params.Info.Path.Key)
+	cols := fields[funclabel].([]string) //
+	selectColumn := strings.Join(cols, ",")
+	return selectColumn
+
+}
+
+func Query(sql string, db *sql.DB) ([]map[string]interface{}, error) {
 
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -237,4 +240,22 @@ func GetAllRowsByQuery(sql string, db *sql.DB) ([]map[string]interface{}, error)
 		tableData = append(tableData, dd)
 	}
 	return tableData, nil
+}
+
+func Paginate(rows []map[string]interface{}, page int, pageSize int) ([]map[string]interface{}, error) {
+	startIndex := (page - 1) * pageSize
+	if startIndex >= len(rows) {
+		return nil, errors.New("no data found for the requested page")
+	}
+
+	endIndex := startIndex + pageSize
+	if endIndex > len(rows) {
+		endIndex = len(rows)
+	}
+
+	fmt.Println( rows[startIndex:endIndex])
+	fmt.Println("endIndex")
+	fmt.Println(endIndex)
+
+	return rows[startIndex:endIndex], nil
 }

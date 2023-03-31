@@ -10,7 +10,7 @@ import (
 
 func GetCourses() *graphql.Field {
 	return &graphql.Field{
-		Type: graphql.NewList(types.CourseType),
+		Type: types.CourseType,
 		Args: graphql.FieldConfigArgument{
 			"page": &graphql.ArgumentConfig{
 				Type: graphql.Int,
