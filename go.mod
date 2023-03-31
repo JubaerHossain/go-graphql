@@ -9,3 +9,5 @@ require (
 	github.com/graphql-go/handler v0.2.3
 	golang.org/x/crypto v0.7.0
 )
+
+require github.com/joho/godotenv v1.5.1 // indirect
