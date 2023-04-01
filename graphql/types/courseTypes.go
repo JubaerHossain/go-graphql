@@ -8,6 +8,7 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 	Name:        "Course",
 	Description: "Course Type",
 	Fields: graphql.Fields{
+
 		"id": &graphql.Field{
 			Type: graphql.Int,
 		},

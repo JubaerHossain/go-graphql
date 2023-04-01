@@ -13,14 +13,10 @@ import (
 )
 
 func GetCourses(params graphql.ResolveParams) (interface{}, error) {
-	// Get the type of the model
-	modelType := reflect.TypeOf(model.Course{})
-	// Call QueryModel function with the model type
-	courses, err := query.QueryModel(modelType, "courses", params)
+	courses, err := query.QueryModel(reflect.TypeOf(model.Course{}), "courses", params)
 	if err != nil {
 		return nil, errors.New("no data found")
 	}
-	fmt.Println(courses)
 	return courses, nil
 }
 

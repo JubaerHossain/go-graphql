@@ -13,10 +13,7 @@ import (
 )
 
 func GetUsers(params graphql.ResolveParams) (interface{}, error) {
-	// Get the type of the model
-	modelType := reflect.TypeOf(model.User{})
-	// Call QueryModel function with the model type
-	users, err := query.QueryModel(modelType, "users", params)
+	users, err := query.QueryModel(reflect.TypeOf(model.User{}), "users", params)
 	if err != nil {
 		return nil, errors.New("no data found")
 	}
@@ -29,7 +26,7 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 	if ok {
 		var user model.User
 		row := database.DB.QueryRow("SELECT id, name, phone, password FROM users WHERE id = ?", id)
-		err := row.Scan(&user.Id, &user.Name, &user.Phone, &user.Password)
+		err := row.Scan(&user.Id, &user.Name, &user.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -44,11 +41,11 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	var user model.User
 	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	user.Name = params.Args["name"].(string)
-	user.Phone = params.Args["phone"].(string)
+	// user.Phone = params.Args["phone"].(string)
 	user.Password = hash
-	user.Role = params.Args["role"].(string)
-	user.Status = params.Args["status"].(string)
-	user.CreatedAt = utils.GetTimeNow()
+	// user.Role = params.Args["role"].(string)
+	// user.Status = params.Args["status"].(string)
+	// user.CreatedAt = utils.GetTimeNow()
 	// fmt.Println(user)
 
 	id, err := query.Insert("users", user, database.DB)
@@ -75,7 +72,7 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	if ok {
 		var user model.User
 		row := database.DB.QueryRow("SELECT id, name, phone, role FROM users WHERE id = ?", id)
-		err := row.Scan(&user.Id, &user.Name, &user.Phone, &user.Role)
+		err := row.Scan(&user.Id, &user.Name)
 		if err != nil {
 			return nil, err
 		}
