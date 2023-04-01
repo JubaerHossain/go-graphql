@@ -22,19 +22,13 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func GetUser(params graphql.ResolveParams) (interface{}, error) {
-	id, ok := params.Args["id"].(int)
-	if ok {
-		var user model.User
-		row := database.DB.QueryRow("SELECT id, name, phone, password FROM users WHERE id = ?", id)
-		err := row.Scan(&user.Id, &user.Name, &user.Password)
-		if err != nil {
-			return nil, err
-		}
-
-		return user, nil
+	user, err := query.FindModel(reflect.TypeOf(model.User{}), "users", params)
+	if err != nil {
+		fmt.Println(err)
+		return nil, errors.New("no data found")
 	}
 
-	return nil, nil
+	return user, nil
 }
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {

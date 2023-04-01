@@ -68,6 +68,8 @@ func QueryModel(modelType reflect.Type, modelName string, params graphql.Resolve
 	// Build the SQL query string
 	selectColumn := GetColumns(params)
 
+	fmt.Println(selectColumn)
+
 	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, modelName, pageSize, offset)
 
 	// Execute the query
@@ -103,4 +105,36 @@ func QueryModel(modelType reflect.Type, modelName string, params graphql.Resolve
 
 	// Convert the results slice to an interface{} and return it
 	return results.Interface(), nil
+}
+
+func FindModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
+	// Get the database connection
+	db := database.DB
+
+	// Get the query parameters
+	id, ok := params.Args["id"].(int)
+	if !ok {
+		return nil, errors.New("id is required")
+	}
+	// Build the SQL query string
+	selectColumn := GetColumns(params)
+	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d;", selectColumn, modelName, id)
+	// Execute the query
+	row := db.QueryRow(sql)
+	// Create a new model instance
+	model := reflect.New(modelType).Interface()
+
+	// Get a list of pointers to the fields in the model struct
+	columns, err := ModelColumn(selectColumn, model)
+	if err != nil {
+		return nil, err
+	}
+	// Scan the current row of data into the model struct fields
+	err = row.Scan(columns...)
+	if err != nil {
+		return nil, errors.New("no data found")
+	}
+
+	// Convert the model to an interface{} and return it
+	return model, nil
 }
