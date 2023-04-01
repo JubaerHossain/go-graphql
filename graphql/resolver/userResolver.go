@@ -4,47 +4,32 @@ import (
 	"errors"
 	"fmt"
 	"lms/database"
-	"lms/graphql/types"
+	"lms/model"
 	"lms/query"
 	"lms/utils"
+	"reflect"
 
 	"github.com/graphql-go/graphql"
 )
 
 func GetUsers(params graphql.ResolveParams) (interface{}, error) {
-	page, ok := params.Args["page"].(int)
-	if !ok {
-		page = 1
-	}
-	pageSize, ok := params.Args["pageSize"].(int)
-	if !ok {
-		pageSize = 10
-	}
-	offset := (page - 1) * pageSize
-	selectColumn := query.GetColumns(params)
-	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "users", pageSize, offset)
-
-	rows, err := query.Query(sql, database.DB)
+	// Get the type of the model
+	modelType := reflect.TypeOf(model.User{})
+	// Call QueryModel function with the model type
+	users, err := query.QueryModel(modelType, "users", params)
 	if err != nil {
-		return nil, err
-	}
-
-	data := make(map[string]interface{})
-	if len(rows) == 1 {
-		data = rows[0]
-	}
-	if len(rows) == 0 {
 		return nil, errors.New("no data found")
 	}
-	return data, nil
+
+	return users, nil
 }
 
 func GetUser(params graphql.ResolveParams) (interface{}, error) {
 	id, ok := params.Args["id"].(int)
 	if ok {
-		var user types.User
+		var user model.User
 		row := database.DB.QueryRow("SELECT id, name, phone, password FROM users WHERE id = ?", id)
-		err := row.Scan(&user.ID, &user.Name, &user.Phone, &user.Password)
+		err := row.Scan(&user.Id, &user.Name, &user.Phone, &user.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +41,7 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {
-	var user types.User
+	var user model.User
 	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	user.Name = params.Args["name"].(string)
 	user.Phone = params.Args["phone"].(string)
@@ -70,7 +55,7 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	user.ID = int(id)
+	user.Id = int(id)
 	return user, nil
 }
 
@@ -88,9 +73,9 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	}
 	id, ok := params.Args["id"].(int)
 	if ok {
-		var user types.User
+		var user model.User
 		row := database.DB.QueryRow("SELECT id, name, phone, role FROM users WHERE id = ?", id)
-		err := row.Scan(&user.ID, &user.Name, &user.Phone, &user.Role)
+		err := row.Scan(&user.Id, &user.Name, &user.Phone, &user.Role)
 		if err != nil {
 			return nil, err
 		}

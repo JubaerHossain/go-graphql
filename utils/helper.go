@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -25,7 +27,10 @@ func CreateJwtToken(id int, role string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   id,
 		"role": role,
-	}).SignedString([]byte("secret"))
-
-	
+	}).SignedString([]byte("secret"))	
 }
+
+func ToString(data interface{}) string {
+	return fmt.Sprintf("%v", data)
+}
+

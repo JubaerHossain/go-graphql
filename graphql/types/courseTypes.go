@@ -4,15 +4,6 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-type Course struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	User_id     int    `json:"user_id"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	CreatedAt   string `json:"createdAt"`
-}
-
 var CourseType = graphql.NewObject(graphql.ObjectConfig{
 	Name:        "Course",
 	Description: "Course Type",
@@ -26,7 +17,7 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 		"description": &graphql.Field{
 			Type: graphql.String,
 		},
-		"user_id": &graphql.Field{
+		"user": &graphql.Field{
 			Type: graphql.Int,
 		},
 		"status": &graphql.Field{
@@ -37,5 +28,3 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 })
-
-type Courses []Course

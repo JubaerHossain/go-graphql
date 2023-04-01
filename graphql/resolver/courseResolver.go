@@ -4,50 +4,32 @@ import (
 	"errors"
 	"fmt"
 	"lms/database"
-	"lms/graphql/types"
+	"lms/model"
 	"lms/query"
 	"lms/utils"
-	"strconv"
+	"reflect"
 
 	"github.com/graphql-go/graphql"
 )
 
 func GetCourses(params graphql.ResolveParams) (interface{}, error) {
-	page, ok := params.Args["page"].(int)
-	if !ok {
-		page = 1
-	}
-	pageSize, ok := params.Args["pageSize"].(int)
-	if !ok {
-		pageSize = 10
-	}
-	offset := (page - 1) * pageSize
-	selectColumn := query.GetColumns(params)
-	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, "courses", pageSize, offset)
-
-	rows, err := query.Query(sql, database.DB)
+	// Get the type of the model
+	modelType := reflect.TypeOf(model.Course{})
+	// Call QueryModel function with the model type
+	courses, err := query.QueryModel(modelType, "courses", params)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("no data found")
 	}
-
-	if len(rows) > 1 {
-		obj := make(map[string]interface{})
-		for key, val := range rows {
-			obj[strconv.Itoa(key)] = val
-		}
-		return obj, nil
-	}
-
-	return nil, errors.New("no data found")
-
+	fmt.Println(courses)
+	return courses, nil
 }
 
 func GetCourse(params graphql.ResolveParams) (interface{}, error) {
 	id, ok := params.Args["id"].(int)
 	if ok {
-		var course types.Course
+		var course model.Course
 		row := database.DB.QueryRow("SELECT id, name, description, status FROM course WHERE id = ?", id)
-		err := row.Scan(&course.ID, &course.Name, &course.Description, &course.Status)
+		err := row.Scan(&course.Id, &course.Name, &course.Description, &course.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -69,10 +51,10 @@ func CreateCourse(params graphql.ResolveParams) (interface{}, error) {
 	// sql := fmt.Sprintf("SELECT %s FROM %s WHERE id='%v';", selectColumn, "account", id)
 	// fmt.Println(sql)
 	// return nil, nil
-	var course types.Course
+	var course model.Course
 	course.Name = params.Args["name"].(string)
 	course.Description = params.Args["description"].(string)
-	course.User_id = params.Args["user_id"].(int)
+	course.User = params.Args["user"].(int)
 	course.Status = params.Args["status"].(string)
 	course.CreatedAt = utils.GetTimeNow()
 	fmt.Println(course)
@@ -82,7 +64,7 @@ func CreateCourse(params graphql.ResolveParams) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	course.ID = int(id)
+	course.Id = int(rune(id))
 	return course, nil
 }
 
@@ -101,9 +83,9 @@ func UpdateCourse(params graphql.ResolveParams) (interface{}, error) {
 	}
 	id, ok := params.Args["id"].(int)
 	if ok {
-		var course types.Course
+		var course model.Course
 		row := database.DB.QueryRow("SELECT id, name, description, status FROM courses WHERE id = ?", id)
-		err := row.Scan(&course.ID, &course.Name, &course.Description, &course.Status)
+		err := row.Scan(&course.Id, &course.Name, &course.Description, &course.Status)
 		if err != nil {
 			return nil, err
 		}

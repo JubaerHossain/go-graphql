@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
 )
 
@@ -187,29 +186,6 @@ func (s *mapStringScan) Get() map[string]string {
 	return s.row
 }
 
-func GetColumns(params graphql.ResolveParams) string {
-	fieldASTs := params.Info.FieldASTs
-	var fields = make(map[string]interface{})
-	for _, val := range fieldASTs {
-		var cols []string
-		for _, sel := range val.SelectionSet.Selections {
-			field, ok := sel.(*ast.Field)
-			if ok {
-				if field.Name.Kind == "Name" {
-					cols = append(cols, field.Name.Value)
-				}
-			}
-		}
-		fields[val.Name.Value] = cols
-	}
-
-	funclabel := fmt.Sprint(params.Info.Path.Key)
-	cols := fields[funclabel].([]string) //
-	selectColumn := strings.Join(cols, ",")
-	return selectColumn
-
-}
-
 func Query(sql string, db *sql.DB) ([]map[string]interface{}, error) {
 
 	rows, err := db.Query(sql)
@@ -253,7 +229,7 @@ func Paginate(rows []map[string]interface{}, page int, pageSize int) ([]map[stri
 		endIndex = len(rows)
 	}
 
-	fmt.Println( rows[startIndex:endIndex])
+	fmt.Println(rows[startIndex:endIndex])
 	fmt.Println("endIndex")
 	fmt.Println(endIndex)
 
