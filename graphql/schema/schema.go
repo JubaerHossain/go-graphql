@@ -2,9 +2,6 @@ package schema
 
 import (
 	"github.com/graphql-go/graphql"
-	// Import the user and course schema files using package aliases.
-	"lms/graphql/schema/course"
-	"lms/graphql/schema/user"
 )
 
 // Define the root query object.
@@ -13,10 +10,10 @@ var RootQuery = graphql.NewObject(graphql.ObjectConfig{
 	// Merge the user and course queries into the root query object.
 	Fields: graphql.Fields{
 		// Merge the user and course queries into the root query object.
-		"users":   user.GetUsers(),     // Use the shorthand syntax to define the fields.
-		"user":    user.GetUser(),      // Use the shorthand syntax to define the fields.
-		"courses": course.GetCourses(), // Use the shorthand syntax to define the fields.
-		"course":  course.GetCourse(),  // Use the shorthand syntax to define the fields.
+		"users":   GetUsers(),   // Use the shorthand syntax to define the fields.
+		"user":    GetUser(),    // Use the shorthand syntax to define the fields.
+		"courses": GetCourses(), // Use the shorthand syntax to define the fields.
+		"course":  GetCourse(),  // Use the shorthand syntax to define the fields.
 	},
 })
 
@@ -26,12 +23,12 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 	// Merge the user and course mutations into the root mutation object.
 	Fields: graphql.Fields{
 		// Use the shorthand syntax to define the fields.
-		"createUser":   user.CreateUser(),     // Use the shorthand syntax to define the fields.
-		"updateUser":   user.UpdateUser(),     // Use the shorthand syntax to define the fields.
-		"deleteUser":   user.DeleteUser(),     // Use the shorthand syntax to define the fields.
-		"createCourse": course.CreateCourse(), // Use the shorthand syntax to define the fields.
-		"updateCourse": course.UpdateCourse(), // Use the shorthand syntax to define the fields.
-		"deleteCourse": course.DeleteCourse(), // Use the shorthand syntax to define the fields.
+		"createUser":   CreateUser(),   // Use the shorthand syntax to define the fields.
+		"updateUser":   UpdateUser(),   // Use the shorthand syntax to define the fields.
+		"deleteUser":   DeleteUser(),   // Use the shorthand syntax to define the fields.
+		"createCourse": CreateCourse(), // Use the shorthand syntax to define the fields.
+		"updateCourse": UpdateCourse(), // Use the shorthand syntax to define the fields.
+		"deleteCourse": DeleteCourse(), // Use the shorthand syntax to define the fields.
 
 	},
 })

@@ -32,6 +32,8 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {
+
+	fmt.Println( params.Args)
 	var user model.User
 	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	user.Name = params.Args["name"].(string)

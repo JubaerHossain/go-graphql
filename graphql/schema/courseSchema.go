@@ -1,4 +1,4 @@
-package course
+package schema
 
 import (
 	"lms/enums"
