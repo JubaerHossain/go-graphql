@@ -15,18 +15,23 @@ import (
 func GetCourses(params graphql.ResolveParams) (interface{}, error) {
 	courses, err := query.QueryModel(reflect.TypeOf(model.Course{}), "courses", params)
 	if err != nil {
+		fmt.Println(err)
 		return nil, errors.New("no data found")
 	}
 	return courses, nil
 }
 
 func GetCourse(params graphql.ResolveParams) (interface{}, error) {
+	// Get the course by ID
 	course, err := query.FindByID(reflect.TypeOf(model.Course{}), "courses", params)
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.New("no data found")
 	}
-	return course, nil
+
+	fmt.Println(reflect.TypeOf(course))
+
+	c := course.(model.Course)
+	return c, nil
 }
 
 func CreateCourse(params graphql.ResolveParams) (interface{}, error) {

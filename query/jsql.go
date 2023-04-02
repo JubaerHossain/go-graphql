@@ -50,9 +50,25 @@ func ModelColumn(selectColumn string, v interface{}) ([]interface{}, error) {
 	return columns, nil
 }
 
+func BuildWhereClause(where map[string]interface{}) (string, []interface{}) {
+	var whereClauses []string
+	var whereArgs []interface{}
+
+	for key, value := range where {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
+		whereArgs = append(whereArgs, value)
+	}
+	return strings.Join(whereClauses, " AND "), whereArgs
+}
+
 func QueryModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
 	// Get the database connection
 	db := database.DB
+
+	where, ok := params.Args["where"].(map[string]interface{})
+	if !ok {
+		where = make(map[string]interface{})
+	}
 
 	// Get the query parameters
 	page, ok := params.Args["page"].(int)
@@ -67,13 +83,13 @@ func QueryModel(modelType reflect.Type, modelName string, params graphql.Resolve
 
 	// Build the SQL query string
 	selectColumn := GetColumns(params)
-
-	fmt.Println(selectColumn)
-
-	sql := fmt.Sprintf("SELECT %s FROM %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, modelName, pageSize, offset)
-
+	whereClause, whereArgs := BuildWhereClause(where)
+	if whereClause == "" {
+		whereClause = "1 = 1"
+	}
+	sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s ORDER BY id DESC LIMIT %d OFFSET %d;", selectColumn, modelName, whereClause, pageSize, offset)
 	// Execute the query
-	rows, err := db.Query(sql)
+	rows, err := db.Query(sql, whereArgs...)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -134,9 +150,7 @@ func FindByID(modelType reflect.Type, modelName string, params graphql.ResolvePa
 	if err != nil {
 		return nil, errors.New("no data found")
 	}
-
-	// Convert the model to an interface{} and return it
-	return model, nil
+	return reflect.ValueOf(model).Elem().Interface(), nil
 }
 
 func QueryModelCount(modelName string, params graphql.ResolveParams) (interface{}, error) {
@@ -280,17 +294,6 @@ func DeleteModel(modelType reflect.Type, modelName string, params graphql.Resolv
 
 	// Return the number of rows affected
 	return rows, nil
-}
-func BuildWhereClause(where map[string]interface{}) (string, []interface{}) {
-	var whereClauses []string
-	var whereArgs []interface{}
-
-	for key, value := range where {
-		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
-		whereArgs = append(whereArgs, value)
-	}
-
-	return strings.Join(whereClauses, " AND "), whereArgs
 }
 
 func WhereModel(modelType reflect.Type, tableName string, params graphql.ResolveParams, where map[string]interface{}) (interface{}, error) {

@@ -8,3 +8,5 @@ type Course struct {
 	Status      string `json:"status"`
 	CreatedAt   string `json:"createdAt"`
 }
+
+type Courses []Course
