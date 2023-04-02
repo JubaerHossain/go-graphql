@@ -21,19 +21,12 @@ func GetCourses(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func GetCourse(params graphql.ResolveParams) (interface{}, error) {
-	id, ok := params.Args["id"].(int)
-	if ok {
-		var course model.Course
-		row := database.DB.QueryRow("SELECT id, name, description, status FROM course WHERE id = ?", id)
-		err := row.Scan(&course.Id, &course.Name, &course.Description, &course.Status)
-		if err != nil {
-			return nil, err
-		}
-
-		return course, nil
+	course, err := query.FindByID(reflect.TypeOf(model.Course{}), "courses", params)
+	if err != nil {
+		fmt.Println(err)
+		return nil, errors.New("no data found")
 	}
-
-	return nil, nil
+	return course, nil
 }
 
 func CreateCourse(params graphql.ResolveParams) (interface{}, error) {

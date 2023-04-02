@@ -14,7 +14,6 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 	Name:        "Course",
 	Description: "Course Type",
 	Fields: graphql.Fields{
-
 		"id": &graphql.Field{
 			Type: graphql.Int,
 		},
@@ -27,7 +26,6 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 		"user": &graphql.Field{
 			Type: UserType,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-
 				x := p.Source.(model.Course)
 				p.Args["id"] = x.User
 				user, err := query.FindByID(reflect.TypeOf(model.User{}), "users", p)
@@ -35,8 +33,6 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 					fmt.Println(err)
 					return nil, errors.New("no data found")
 				}
-				fmt.Println("user")
-				fmt.Println(user)
 				return user, nil
 			},
 		},
