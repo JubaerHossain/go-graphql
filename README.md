@@ -32,7 +32,7 @@
 # screenshot 
 
 # users query example
-![](1.png)
+![](2.jpeg)
 
 # course query example
 
