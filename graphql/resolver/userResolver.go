@@ -1,9 +1,11 @@
 package resolver
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"lms/database"
+	"lms/graphql/validation"
 	"lms/model"
 	"lms/query"
 	"lms/utils"
@@ -33,15 +35,28 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 
-	fmt.Println( params.Args)
+	isValid, validationErr := validation.ValidateUser(context.Background(), params)
+
+	if !isValid {
+		errors := make([]utils.ResolverError, len(validationErr.Errors))
+		for i, err := range validationErr.Errors {
+			errors[i] = utils.ResolverError{
+				Key:     err.Field,
+				Message: err.Message,
+			}
+		}
+		return nil, utils.CreateReturnResponse(nil, errors, 400, "Validation Error")
+	}
+
+	fmt.Println(params.Args)
 	var user model.User
 	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	user.Name = params.Args["name"].(string)
-	// user.Phone = params.Args["phone"].(string)
+	user.Phone = params.Args["phone"].(string)
 	user.Password = hash
-	// user.Role = params.Args["role"].(string)
-	// user.Status = params.Args["status"].(string)
-	// user.CreatedAt = utils.GetTimeNow()
+	user.Role = params.Args["role"].(string)
+	user.Status = params.Args["status"].(string)
+	user.CreatedAt = utils.GetTimeNow()
 	// fmt.Println(user)
 
 	id, err := query.Insert("users", user, database.DB)

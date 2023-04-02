@@ -36,3 +36,32 @@ func ToString(data interface{}) string {
 func ToInt(data interface{}) int {
 	return int(data.(float64))
 }
+
+type ResolverError struct {
+	Key     string `json:"key,omitempty"`
+	Message string `json:"message"`
+}
+
+type ReturnResponse struct {
+	Data   interface{}     `json:"data,omitempty"`
+	Errors []ResolverError `json:"errors,omitempty"`
+	Code   int             `json:"code,omitempty"`
+	Status string          `json:"status,omitempty"`
+}
+
+func (r *ReturnResponse) Error() string {
+	errStr := "Errors: "
+	for _, err := range r.Errors {
+		errStr += fmt.Sprintf("%s: %s, ", err.Key, err.Message)
+	}
+	return fmt.Sprintf("%s Code: %d, Status: %s", errStr, r.Code, r.Status)
+}
+
+func CreateReturnResponse(data interface{}, errors []ResolverError, code int, status string) *ReturnResponse {
+	return &ReturnResponse{
+		Data:   data,
+		Errors: errors,
+		Code:   code,
+		Status: status,
+	}
+}
