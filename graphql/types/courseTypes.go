@@ -1,7 +1,11 @@
 package types
 
 import (
+	"errors"
 	"fmt"
+	"lms/model"
+	"lms/query"
+	"reflect"
 
 	"github.com/graphql-go/graphql"
 )
@@ -21,27 +25,19 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 			Type: graphql.String,
 		},
 		"user": &graphql.Field{
-			Type: graphql.NewList(UserType),
+			Type: UserType,
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 
+				x := p.Source.(model.Course)
+				p.Args["id"] = x.User
+				user, err := query.FindByID(reflect.TypeOf(model.User{}), "users", p)
+				if err != nil {
+					fmt.Println(err)
+					return nil, errors.New("no data found")
+				}
 				fmt.Println("user")
-
-				fmt.Println(p.Source)
-
-				sMap := p.Source.(map[string]interface{})
-				id := sMap["user"]
-				fmt.Println(id)
-
-				// user, err := query.FindModel(reflect.TypeOf(model.User{}), "users", params)
-				// if err != nil {
-				// 	fmt.Println(err)
-				// 	return nil, errors.New("no data found")
-				// }
-
-				// return user, nil
-
-				return nil, nil
-
+				fmt.Println(user)
+				return user, nil
 			},
 		},
 		"status": &graphql.Field{

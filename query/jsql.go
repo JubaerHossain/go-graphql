@@ -107,7 +107,7 @@ func QueryModel(modelType reflect.Type, modelName string, params graphql.Resolve
 	return results.Interface(), nil
 }
 
-func FindModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
+func FindByID(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
 	// Get the database connection
 	db := database.DB
 
@@ -137,4 +137,202 @@ func FindModel(modelType reflect.Type, modelName string, params graphql.ResolveP
 
 	// Convert the model to an interface{} and return it
 	return model, nil
+}
+
+func QueryModelCount(modelName string, params graphql.ResolveParams) (interface{}, error) {
+	// Get the database connection
+	db := database.DB
+
+	// Build the SQL query string
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s;", modelName)
+
+	// Execute the query
+	row := db.QueryRow(sql)
+
+	// Create a variable to hold the count
+	var count int
+
+	// Scan the current row of data into the count variable
+	err := row.Scan(&count)
+	if err != nil {
+		return nil, errors.New("no data found")
+	}
+
+	// Convert the count to an interface{} and return it
+	return count, nil
+}
+
+func CreateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
+	// Get the database connection
+	db := database.DB
+
+	// Get the model data from the GraphQL params
+	model := params.Args["model"]
+
+	// Convert the model data to a map
+	modelMap, ok := model.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("invalid model")
+	}
+
+	// Create a slice to hold the field names and a slice to hold the field values
+	var fields []string
+	var values []interface{}
+
+	// Loop through the model fields and add them to the fields and values slices
+	for key, value := range modelMap {
+		fields = append(fields, key)
+		values = append(values, value)
+	}
+
+	// Build the SQL query string
+	fieldString := strings.Join(fields, ",")
+	valueString := strings.Repeat("?,", len(fields))
+	valueString = valueString[:len(valueString)-1]
+	sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", modelName, fieldString, valueString)
+
+	// Execute the query
+	result, err := db.Exec(sql, values...)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	// Get the ID of the newly created model
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+	params.Args["id"] = id
+
+	// Return the newly created model
+	return FindByID(modelType, modelName, params)
+}
+
+func UpdateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
+	// Get the database connection
+	db := database.DB
+
+	// Get the model data from the GraphQL params
+	model := params.Args["model"]
+
+	// Convert the model data to a map
+	modelMap, ok := model.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("invalid model")
+	}
+
+	// Create a slice to hold the field names and a slice to hold the field values
+	var fields []string
+	var values []interface{}
+
+	// Loop through the model fields and add them to the fields and values slices
+	for key, value := range modelMap {
+		fields = append(fields, fmt.Sprintf("%s = ?", key))
+		values = append(values, value)
+	}
+
+	// Build the SQL query string
+	fieldString := strings.Join(fields, ",")
+	sql := fmt.Sprintf("UPDATE %s SET %s WHERE id = ?;", modelName, fieldString)
+
+	// Execute the query
+	result, err := db.Exec(sql, values...)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	// Get the ID of the updated model
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	params.Args["id"] = id
+
+	// Return the updated model
+	return FindByID(modelType, modelName, params)
+}
+
+func DeleteModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
+	// Get the database connection
+	db := database.DB
+
+	// Get the model ID from the GraphQL params
+	id, ok := params.Args["id"].(int)
+	if !ok {
+		return nil, errors.New("id is required")
+	}
+
+	// Build the SQL query string
+	sql := fmt.Sprintf("DELETE FROM %s WHERE id = ?;", modelName)
+
+	// Execute the query
+	result, err := db.Exec(sql, id)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	// Get the number of rows affected
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	// Return the number of rows affected
+	return rows, nil
+}
+func BuildWhereClause(where map[string]interface{}) (string, []interface{}) {
+	var whereClauses []string
+	var whereArgs []interface{}
+
+	for key, value := range where {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
+		whereArgs = append(whereArgs, value)
+	}
+
+	return strings.Join(whereClauses, " AND "), whereArgs
+}
+
+func WhereModel(modelType reflect.Type, tableName string, params graphql.ResolveParams, where map[string]interface{}) (interface{}, error) {
+	// Get the database connection
+	db := database.DB
+
+	// Build the SQL query string
+	selectColumn := GetColumns(params)
+	whereClause, whereArgs := BuildWhereClause(where)
+	sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s;", selectColumn, tableName, whereClause)
+
+	// Execute the query
+	rows, err := db.Query(sql, whereArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Create a new slice to hold the model instances
+	models := reflect.MakeSlice(reflect.SliceOf(modelType), 0, 0)
+
+	// Loop through the query results and create a new model instance for each row
+	for rows.Next() {
+		// Create a new model instance
+		model := reflect.New(modelType).Interface()
+
+		// Get a list of pointers to the fields in the model struct
+		columns, err := ModelColumn(selectColumn, model)
+		if err != nil {
+			return nil, err
+		}
+
+		// Scan the current row of data into the model struct fields
+		err = rows.Scan(columns...)
+		if err != nil {
+			return nil, errors.New("no data found")
+		}
+
+		// Append the model instance to the models slice
+		models = reflect.Append(models, reflect.ValueOf(model).Elem())
+	}
+
+	// Convert the models slice to an interface{} and return it
+	return models.Interface(), nil
 }

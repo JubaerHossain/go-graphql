@@ -22,15 +22,17 @@ func GetTimeNow() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
 
-
 func CreateJwtToken(id int, role string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":   id,
 		"role": role,
-	}).SignedString([]byte("secret"))	
+	}).SignedString([]byte("secret"))
 }
 
 func ToString(data interface{}) string {
 	return fmt.Sprintf("%v", data)
 }
 
+func ToInt(data interface{}) int {
+	return int(data.(float64))
+}

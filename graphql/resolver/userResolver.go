@@ -22,7 +22,7 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func GetUser(params graphql.ResolveParams) (interface{}, error) {
-	user, err := query.FindModel(reflect.TypeOf(model.User{}), "users", params)
+	user, err := query.FindByID(reflect.TypeOf(model.User{}), "users", params)
 	if err != nil {
 		fmt.Println(err)
 		return nil, errors.New("no data found")
