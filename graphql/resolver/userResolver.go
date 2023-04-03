@@ -1,7 +1,6 @@
 package resolver
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"lms/database"
@@ -44,18 +43,18 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	user.CreatedAt = utils.GetTimeNow()
 	// fmt.Println(user)
 
-	isValid, validationErrs := validation.ValidateUser(context.Background(), &user)
-	if !isValid {
-		// If validation fails, return a validation error
-		var validationErrorItems []validation.ValidationErrorItem
-		for _, validationErr := range validationErrs {
-			validationErrorItems = append(validationErrorItems, validation.ValidationErrorItem{
-				Field:   validationErr.Field,
-				Message: validationErr.Message,
-			})
+	validationErrors := validation.ValidateUser(user)
+	if validationErrors != nil {
+		var errorMsg string
+		for _, validationErr := range validationErrors {
+			errorMsg += fmt.Sprintf("%s validation error: %s\n", validationErr.Field, validationErr.Message)
 		}
-		return nil, fmt.Errorf("%v", validationErrorItems)
+		return nil, fmt.Errorf("failed to create user: %s", errorMsg)
 	}
+
+	return nil, nil
+
+	// continue with creating the user
 
 	id, err := query.Insert("users", user, database.DB)
 	if err != nil {
