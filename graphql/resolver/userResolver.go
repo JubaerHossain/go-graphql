@@ -45,12 +45,13 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 
 	validationErrors := validation.ValidateUser(user)
 	if validationErrors != nil {
-		var errorMsg string
+		var errorMsgs []string
 		for _, validationErr := range validationErrors {
-			errorMsg += fmt.Sprintf("%s validation error: %s\n", validationErr.Field, validationErr.Message)
-		}
-		return nil, fmt.Errorf("failed to create user: %s", errorMsg)
+			errorMsgs = append(errorMsgs, validationErr.Field+" : "+validationErr.Message)
+		}		
+		return errorMsgs, fmt.Errorf("validation error")
 	}
+
 
 	return nil, nil
 

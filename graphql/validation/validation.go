@@ -38,6 +38,7 @@ func Validate(data interface{}, rules []ValidationRule) []ValidationErrorItem {
 		for _, validation := range rule.Validations {
 			validationErr := validation(fieldValue)
 			if validationErr != (ValidationErrorItem{}) {
+				validationErr.Field = rule.Field // set the field name
 				validationErrs = append(validationErrs, validationErr)
 			}
 		}

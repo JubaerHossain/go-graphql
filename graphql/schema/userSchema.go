@@ -41,6 +41,7 @@ func CreateUser() *graphql.Field {
 		Args: graphql.FieldConfigArgument{
 			"name": &graphql.ArgumentConfig{
 				Type: graphql.NewNonNull(graphql.String),
+				
 			},
 			"phone": &graphql.ArgumentConfig{
 				Type: graphql.NewNonNull(graphql.String),

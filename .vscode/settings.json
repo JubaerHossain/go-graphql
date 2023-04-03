@@ -3,6 +3,7 @@
     "colmap",
     "funclabel",
     "godotenv",
+    "gqlerrors",
     "Graphi",
     "tmpl",
     "Userid"
