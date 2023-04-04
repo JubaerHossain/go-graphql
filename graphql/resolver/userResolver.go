@@ -33,17 +33,11 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {
-	var user model.User
 	hash, _ := utils.HashPassword(params.Args["password"].(string))
-	user.Name = params.Args["name"].(string)
-	user.Phone = params.Args["phone"].(string)
-	user.Password = hash
-	user.Role = params.Args["role"].(string)
-	user.Status = params.Args["status"].(string)
-	user.CreatedAt = utils.GetTimeNow()
-	// fmt.Println(user)
-
-	validationErrors := validation.ValidateUser(user)
+	params.Args["password"] = hash
+	params.Args["role"] = "user"
+	params.Args["CreatedAt"] = utils.GetTimeNow()
+	validationErrors := validation.ValidateUser(params)
 	if validationErrors != nil {
 		var errorMsgs []string
 		for _, validationErr := range validationErrors {
@@ -56,21 +50,12 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 
 	fmt.Println(params.Args)
 
-	// user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", params)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return nil, errors.New("no data found")
-	// }
-
-	return nil, nil
-
-	// continue with creating the user
-
-	id, err := query.Insert("users", user, database.DB)
+	user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", params)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
+		return nil, errors.New("no data found")
 	}
-	user.Id = int(id)
+
 	return user, nil
 }
 

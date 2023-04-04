@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -64,4 +65,25 @@ func CreateReturnResponse(data interface{}, errors []ResolverError, code int, st
 		Code:   code,
 		Status: status,
 	}
+}
+
+func SetStructField(s interface{}, name string, value interface{}) error {
+	v := reflect.ValueOf(s).Elem()
+	f := v.FieldByName(name)
+
+	if !f.IsValid() {
+		return fmt.Errorf("no such field: %s in struct", name)
+	}
+
+	if !f.CanSet() {
+		return fmt.Errorf("cannot set field %s value", name)
+	}
+
+	val := reflect.ValueOf(value)
+	if f.Type() != val.Type() {
+		return fmt.Errorf("value type %s does not match field type %s", val.Type(), f.Type())
+	}
+
+	f.Set(val)
+	return nil
 }
