@@ -52,6 +52,8 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 		return errorMsgs, fmt.Errorf("validation error")
 	}
 
+	user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", params)
+
 
 	return nil, nil
 
