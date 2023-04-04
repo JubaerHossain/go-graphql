@@ -47,8 +47,13 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	}
 
 	params.Args["password"] = hash
-
-	fmt.Println(params.Args)
+	params.Args["model"] = model.User{
+		Name:     params.Args["name"].(string),
+		Phone:    params.Args["phone"].(string),
+		Password: hash,
+		Role:     "user",
+		Status:   "active",
+	}
 
 	user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", params)
 	if err != nil {

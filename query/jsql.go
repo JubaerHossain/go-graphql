@@ -180,6 +180,8 @@ func CreateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 	// Get the database connection
 	db := database.DB
 
+	fmt.Println(params.Args)
+
 	// Get the model data from the GraphQL params
 	model := params.Args["model"]
 
