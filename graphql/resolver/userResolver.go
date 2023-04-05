@@ -37,7 +37,7 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	userInput := model.User{
 		Name:      params.Args["name"].(string),
 		Phone:     params.Args["phone"].(string),
-		Password:  hash,
+		Password:  params.Args["password"].(string),
 		Role:      params.Args["role"].(string),
 		Status:    params.Args["status"].(string),
 		CreatedAt: utils.GetTimeNow(),
@@ -50,22 +50,17 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 		}
 		return nil, fmt.Errorf("%s", errorMsgs)
 	}
+	userInput.Password = hash
+	userInputMap := utils.StructToMap(userInput)
 	user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", graphql.ResolveParams{
 		Args: map[string]interface{}{
-			"model": map[string]interface{}{
-				"name":      params.Args["name"],
-				"phone":     params.Args["phone"],
-				"password":  hash,
-				"role":      params.Args["role"],
-				"status":    params.Args["status"],
-				"CreatedAt":utils.GetTimeNow(),
-			},
+			"model": userInputMap,
 		},
 	})
 
 	if err != nil {
 		fmt.Println(err)
-		return nil, errors.New("no data found")
+		return nil, errors.New("failed to create user")
 	}
 
 	return user, nil

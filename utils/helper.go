@@ -67,6 +67,15 @@ func CreateReturnResponse(data interface{}, errors []ResolverError, code int, st
 	}
 }
 
+func StructToMap(obj interface{}) map[string]interface{} {
+	v := reflect.ValueOf(obj)
+	values := make(map[string]interface{})
+	for i := 0; i < v.NumField(); i++ {
+		values[v.Type().Field(i).Name] = v.Field(i).Interface()
+	}
+	return values
+}
+
 func SetStructField(s interface{}, name string, value interface{}) error {
 	v := reflect.ValueOf(s).Elem()
 	f := v.FieldByName(name)
