@@ -43,18 +43,8 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 		for _, validationErr := range validationErrors {
 			errorMsgs = append(errorMsgs, validationErr.Field+" : "+validationErr.Message)
 		}
-		return errorMsgs, fmt.Errorf("validation error")
+		return nil, fmt.Errorf("%s", errorMsgs)
 	}
-
-	params.Args["password"] = hash
-	params.Args["model"] = model.User{
-		Name:     params.Args["name"].(string),
-		Phone:    params.Args["phone"].(string),
-		Password: hash,
-		Role:     "user",
-		Status:   "active",
-	}
-
 	user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", params)
 	if err != nil {
 		fmt.Println(err)
