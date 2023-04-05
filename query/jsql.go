@@ -180,8 +180,6 @@ func CreateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 	// Get the database connection
 	db := database.DB
 
-	fmt.Println(params.Args)
-
 	// Get the model data from the GraphQL params
 	model := params.Args["model"]
 
@@ -213,16 +211,20 @@ func CreateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 		return nil, errors.New(err.Error())
 	}
 
-	// Get the ID of the newly created model
-	id, err := result.LastInsertId()
+	// Get the number of rows affected by the query
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
-	params.Args["id"] = id
 
-	// Return the newly created model
-	return FindByID(modelType, modelName, params)
+	if rowsAffected == 0 {
+		return nil, errors.New("failed to create model")
+	}
+
+	// Return the newly created model data
+	return model, nil
 }
+
 
 func UpdateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams) (interface{}, error) {
 	// Get the database connection

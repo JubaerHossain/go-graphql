@@ -2,18 +2,10 @@ package validation
 
 import (
 	"lms/model"
-
-	"github.com/graphql-go/graphql"
 )
 
-func ValidateUser(params graphql.ResolveParams) []ValidationErrorItem {
-	var user model.User
-	user.Name = params.Args["name"].(string)
-	user.Phone = params.Args["phone"].(string)
-	user.Password = params.Args["password"].(string)
-	user.Role = params.Args["role"].(string)
-	user.Status = params.Args["status"].(string)
-	user.CreatedAt = params.Args["CreatedAt"].(string)
+func ValidateUser(user model.User) []ValidationErrorItem {
+
 	rules := []ValidationRule{
 		{
 			Field:       "name",
