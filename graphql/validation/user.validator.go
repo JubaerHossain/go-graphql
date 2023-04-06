@@ -2,51 +2,53 @@ package validation
 
 import (
 	"lms/model"
+
+	"github.com/JubaerHossain/validation"
 )
 
-func ValidateUser(user model.User) []ValidationErrorItem {
+func ValidateUser(user model.User) []validation.ValidationErrorItem {
 
-	rules := []ValidationRule{
+	rules := []validation.ValidationRule{
 		{
 			Field:       "name",
 			Description: "Name",
-			Validations: []func(interface{}) ValidationErrorItem{
-				RequiredValidation,
-				MinLengthValidation(3),
-				MaxLengthValidation(50),
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
+				validation.MinLengthValidation(3),
+				validation.MaxLengthValidation(50),
 			},
 		},
 		{
 			Field:       "phone",
 			Description: "Phone",
-			Validations: []func(interface{}) ValidationErrorItem{
-				RequiredValidation,
-				PhoneValidation,
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
+				validation.PhoneValidation,
 			},
 		},
 		{
 			Field:       "password",
 			Description: "Password",
-			Validations: []func(interface{}) ValidationErrorItem{
-				RequiredValidation,
-				MinLengthValidation(6),
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
+				validation.MinLengthValidation(6),
 			},
 		},
 		{
 			Field:       "role",
 			Description: "Role",
-			Validations: []func(interface{}) ValidationErrorItem{
-				RequiredValidation,
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
 			},
 		},
 		{
 			Field:       "status",
 			Description: "Status",
-			Validations: []func(interface{}) ValidationErrorItem{
-				RequiredValidation,
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
 			},
 		},
 	}
 
-	return Validate(user, rules)
+	return validation.Validate(user, rules)
 }
