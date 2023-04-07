@@ -12,4 +12,4 @@ require (
 	golang.org/x/crypto v0.7.0
 )
 
-require github.com/JubaerHossain/gosql v1.0.0 // indirect
+require github.com/JubaerHossain/gosql v1.0.0

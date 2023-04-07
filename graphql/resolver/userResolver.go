@@ -66,30 +66,32 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
-	forms := map[string]interface{}{
-		"name":  params.Args["name"],
-		"phone": params.Args["phone"],
+	userInput := model.User{
+		Name:   params.Args["name"].(string),
+		Phone:  params.Args["phone"].(string),
+		Role:   params.Args["role"].(string),
+		Status: params.Args["status"].(string),
 	}
-	forms["table"] = "users"
-	forms["id"] = params.Args["id"].(int)
-	// err := query.Update(forms, database.DB)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return nil, errors.New("update user failed")
-	// }
-	// id, ok := params.Args["id"].(int)
-	// if ok {
-	// 	var user model.User
-	// 	row := database.DB.QueryRow("SELECT id, name, phone, role FROM users WHERE id = ?", id)
-	// 	err := row.Scan(&user.Id, &user.Name)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+	validationErrors := validation.ValidateUser(userInput)
+	if validationErrors != nil {
+		var errorMsgs []string
+		for _, validationErr := range validationErrors {
+			errorMsgs = append(errorMsgs, validationErr.Field+" : "+validationErr.Message)
+		}
+		return nil, fmt.Errorf("%s", errorMsgs)
+	}
+	userInputMap := utils.StructToMap(userInput)
+	user, err := gosql.UpdateModel(reflect.TypeOf(model.User{}), "users", graphql.ResolveParams{
+		Args: map[string]interface{}{
+			"model": userInputMap,
+		},
+	}, database.DB)
 
-	// 	return user, nil
-	// }
+	if err != nil {
+		return nil, errors.New("failed to update user")
+	}
 
-	return nil, nil
+	return user, nil
 }
 
 func DeleteUser(params graphql.ResolveParams) (interface{}, error) {
