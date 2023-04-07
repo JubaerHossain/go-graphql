@@ -2,10 +2,11 @@ package types
 
 import (
 	"errors"
+	"lms/database"
 	"lms/model"
-	"lms/query"
 	"reflect"
 
+	"github.com/JubaerHossain/gosql"
 	"github.com/graphql-go/graphql"
 )
 
@@ -27,7 +28,7 @@ var CourseType = graphql.NewObject(graphql.ObjectConfig{
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				x := p.Source.(model.Course)
 				p.Args["id"] = x.User
-				user, err := query.FindByID(reflect.TypeOf(model.User{}), "users", p)
+				user, err := gosql.FindByID(reflect.TypeOf(model.User{}), "users", p, database.DB)
 				if err != nil {
 					return nil, errors.New("no data found")
 				}
