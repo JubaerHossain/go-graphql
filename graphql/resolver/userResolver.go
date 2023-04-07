@@ -6,15 +6,15 @@ import (
 	"lms/database"
 	"lms/graphql/validation"
 	"lms/model"
-	"lms/query"
 	"lms/utils"
 	"reflect"
 
+	"github.com/JubaerHossain/gosql"
 	"github.com/graphql-go/graphql"
 )
 
 func GetUsers(params graphql.ResolveParams) (interface{}, error) {
-	users, err := query.QueryModel(reflect.TypeOf(model.User{}), "users", params)
+	users, err := gosql.QueryModel(reflect.TypeOf(model.User{}), "users", params, database.DB)
 	if err != nil {
 		return nil, errors.New("no data found")
 	}
@@ -23,7 +23,7 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func GetUser(params graphql.ResolveParams) (interface{}, error) {
-	user, err := query.FindByID(reflect.TypeOf(model.User{}), "users", params)
+	user, err := gosql.FindByID(reflect.TypeOf(model.User{}), "users", params, database.DB)
 	if err != nil {
 		fmt.Println(err)
 		return nil, errors.New("no data found")
@@ -52,14 +52,13 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	}
 	userInput.Password = hash
 	userInputMap := utils.StructToMap(userInput)
-	user, err := query.CreateModel(reflect.TypeOf(model.User{}), "users", graphql.ResolveParams{
+	user, err := gosql.CreateModel(reflect.TypeOf(model.User{}), "users", graphql.ResolveParams{
 		Args: map[string]interface{}{
 			"model": userInputMap,
 		},
-	})
+	}, database.DB)
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.New("failed to create user")
 	}
 
@@ -73,22 +72,22 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	}
 	forms["table"] = "users"
 	forms["id"] = params.Args["id"].(int)
-	err := query.Update(forms, database.DB)
-	if err != nil {
-		fmt.Println(err)
-		return nil, errors.New("update user failed")
-	}
-	id, ok := params.Args["id"].(int)
-	if ok {
-		var user model.User
-		row := database.DB.QueryRow("SELECT id, name, phone, role FROM users WHERE id = ?", id)
-		err := row.Scan(&user.Id, &user.Name)
-		if err != nil {
-			return nil, err
-		}
+	// err := query.Update(forms, database.DB)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return nil, errors.New("update user failed")
+	// }
+	// id, ok := params.Args["id"].(int)
+	// if ok {
+	// 	var user model.User
+	// 	row := database.DB.QueryRow("SELECT id, name, phone, role FROM users WHERE id = ?", id)
+	// 	err := row.Scan(&user.Id, &user.Name)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		return user, nil
-	}
+	// 	return user, nil
+	// }
 
 	return nil, nil
 }

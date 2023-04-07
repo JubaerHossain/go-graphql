@@ -1,3 +1,5 @@
+github.com/JubaerHossain/gosql v1.0.0 h1:UX0RoDb/pnCo6MZlxVKvCE/GSC7ARmLOyZiMrPg+M2Q=
+github.com/JubaerHossain/gosql v1.0.0/go.mod h1:wyr393I4ysw10Bvn0IcO5pJMgs2+PfDlL1vOs8aFkiU=
 github.com/JubaerHossain/validation v1.0.0 h1:96KuWztQjhoARx0x2kKCcstDCmrA67hZE6NncDV6oRg=
 github.com/JubaerHossain/validation v1.0.0/go.mod h1:u0oZZFpaYGx3Uxy2Y9z8foZkRHiJbnTMpfrnEwdMhcw=
 github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ7YPc=
