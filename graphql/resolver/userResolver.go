@@ -8,8 +8,7 @@ import (
 	"lms/model"
 	"lms/utils"
 	"reflect"
-
-	"github.com/JubaerHossain/gosql"
+	"lms/gosql"
 	"github.com/graphql-go/graphql"
 )
 
@@ -25,7 +24,6 @@ func GetUsers(params graphql.ResolveParams) (interface{}, error) {
 func GetUser(params graphql.ResolveParams) (interface{}, error) {
 	user, err := gosql.FindByID(reflect.TypeOf(model.User{}), "users", params, database.DB)
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.New("no data found")
 	}
 
@@ -58,7 +56,11 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 		},
 	}, database.DB)
 
+	
+	fmt.Println(reflect.TypeOf(user))
+
 	if err != nil {
+		fmt.Println(err)
 		return nil, errors.New("failed to create user")
 	}
 
