@@ -66,7 +66,6 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 		Phone: phone,
 		Status: status,
 	}
-	fmt.Println(userInput)
 	validationErrors := validation.ValidateUserUpdate(userInput)
 	if validationErrors != nil {
 		var errorMsgs []string
