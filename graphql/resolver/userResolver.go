@@ -44,6 +44,7 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	if validationErrors != nil {
 		var errorMsgs []string
 		for _, validationErr := range validationErrors {
+			fmt.Println(validationErr.Field)
 			errorMsgs = append(errorMsgs, validationErr.Field+" : "+validationErr.Message)
 		}
 		return nil, fmt.Errorf("%s", errorMsgs)
