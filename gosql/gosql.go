@@ -11,6 +11,34 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 )
 
+func StructToMap(obj interface{}) map[string]interface{} {
+	v := reflect.ValueOf(obj)
+	values := make(map[string]interface{})
+	for i := 0; i < v.NumField(); i++ {
+		values[v.Type().Field(i).Name] = v.Field(i).Interface()
+	}
+	return values
+}
+
+func MapToStruct(data map[string]interface{}, resultType reflect.Type) interface{} {
+	result := reflect.New(resultType).Elem()
+	for key, value := range data {
+		field := result.FieldByName(key)
+		if !field.IsValid() {
+			continue
+		}
+		if !field.CanSet() {
+			continue
+		}
+		fieldValue := reflect.ValueOf(value)
+		if field.Type() != fieldValue.Type() {
+			continue
+		}
+		field.Set(fieldValue)
+	}
+	return result.Interface()
+}
+
 func GetColumns(params graphql.ResolveParams) string {
 	fieldASTs := params.Info.FieldASTs
 	var fields = make(map[string]interface{})
@@ -174,10 +202,9 @@ func QueryModelCount(modelName string, params graphql.ResolveParams, db *sql.DB)
 	return count, nil
 }
 
-func CreateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, modelMap map[string]interface{}, db *sql.DB) (interface{}, error) {
+func CreateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, Input interface{}, db *sql.DB) (interface{}, error) {
 
-	fmt.Println("from create model")
-
+	modelMap := StructToMap(Input)
 	// Create a slice to hold the field names and a slice to hold the field values
 	var fields []string
 	var values []interface{}
@@ -217,25 +244,20 @@ func CreateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 
 	modelMap["id"] = id
 
-	return modelMap, nil
+	response := MapToStruct(modelMap, modelType)
+
+	return response, nil
 }
 
-func UpdateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, db *sql.DB) (interface{}, error) {
-	// Get the model data from the GraphQL params
-	model := params.Args["model"]
-
-	// Convert the model data to a map
-	modelMap, ok := model.(map[string]interface{})
-	if !ok {
-		return nil, errors.New("invalid model")
-	}
-
+func UpdateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, Input interface{}, db *sql.DB) (interface{}, error) {
+	modelMap := StructToMap(Input)
 	// Create a slice to hold the field names and a slice to hold the field values
 	var fields []string
 	var values []interface{}
 
 	// Loop through the model fields and add them to the fields and values slices
 	for key, value := range modelMap {
+		fmt.Println(key)
 		if key != "id" {
 			fields = append(fields, fmt.Sprintf("%s = ?", key))
 			values = append(values, value)
@@ -248,6 +270,8 @@ func UpdateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 	// Build the SQL query string
 	fieldString := strings.Join(fields, ",")
 	sql := fmt.Sprintf("UPDATE %s SET %s WHERE id = ?;", modelName, fieldString)
+
+	fmt.Println(sql)
 
 	// Execute the query
 	result, err := db.Exec(sql, values...)
@@ -264,9 +288,9 @@ func UpdateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 	if rowsAffected == 0 {
 		return nil, errors.New("no rows updated")
 	}
-
-	// Return the updated model
-	return FindByID(modelType, modelName, params, db)
+	modelMap["id"] = params.Args["id"]
+	response := MapToStruct(modelMap, modelType)
+	return response, nil
 }
 
 func DeleteModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, db *sql.DB) (interface{}, error) {

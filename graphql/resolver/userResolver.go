@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"lms/database"
-	"lms/gosql"
-	"lms/graphql/validation"
+	"lms/graphql/validate"
 	"lms/model"
 	"lms/utils"
 	"reflect"
+	"lms/gosql"
 
 	"github.com/graphql-go/graphql"
 )
@@ -32,7 +32,6 @@ func GetUser(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func CreateUser(params graphql.ResolveParams) (interface{}, error) {
-	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	userInput := model.User{
 		Name:      params.Args["name"].(string),
 		Phone:     params.Args["phone"].(string),
@@ -49,31 +48,26 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 		}
 		return nil, fmt.Errorf("%s", errorMsgs)
 	}
+	hash, _ := utils.HashPassword(params.Args["password"].(string))
 	userInput.Password = hash
-	userInputMap := utils.StructToMap(userInput)
-	user, err := gosql.CreateModel(reflect.TypeOf(model.User{}), "users", params, userInputMap, database.DB)
-
+	user, err := gosql.CreateModel(reflect.TypeOf(model.User{}), "users", params, userInput, database.DB)
 	if err != nil {
-		fmt.Println(err)
-		return nil, errors.New("failed to create user")
+		return nil, err
 	}
-	userMap, ok := user.(map[string]interface{})
-	if !ok {
-		return nil, errors.New("failed to convert user to map")
-	}
-
-	userResponse := utils.MapToStruct(userMap, reflect.TypeOf(model.User{}))
-	return userResponse, nil
+	return user, nil
 }
 
 func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
+	name, _ := params.Args["name"].(string)
+	phone, _ := params.Args["phone"].(string)
+	status, _ := params.Args["status"].(string)
 	userInput := model.User{
-		Name:   params.Args["name"].(string),
-		Phone:  params.Args["phone"].(string),
-		Role:   params.Args["role"].(string),
-		Status: params.Args["status"].(string),
+		Name:   name,
+		Phone: phone,
+		Status: status,
 	}
-	validationErrors := validation.ValidateUser(userInput)
+	fmt.Println(userInput)
+	validationErrors := validation.ValidateUserUpdate(userInput)
 	if validationErrors != nil {
 		var errorMsgs []string
 		for _, validationErr := range validationErrors {
@@ -81,14 +75,9 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 		}
 		return nil, fmt.Errorf("%s", errorMsgs)
 	}
-	userInputMap := utils.StructToMap(userInput)
-	user, err := gosql.UpdateModel(reflect.TypeOf(model.User{}), "users", graphql.ResolveParams{
-		Args: map[string]interface{}{
-			"model": userInputMap,
-		},
-	}, database.DB)
-
+	user, err := gosql.UpdateModel(reflect.TypeOf(model.User{}), "users", params, userInput, database.DB)
 	if err != nil {
+		fmt.Println(err)
 		return nil, errors.New("failed to update user")
 	}
 

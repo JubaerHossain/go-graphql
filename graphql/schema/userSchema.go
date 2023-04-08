@@ -68,10 +68,13 @@ func UpdateUser() *graphql.Field {
 				Type: graphql.NewNonNull(graphql.Int),
 			},
 			"name": &graphql.ArgumentConfig{
-				Type: graphql.NewNonNull(graphql.String),
+				Type: graphql.String,
 			},
 			"phone": &graphql.ArgumentConfig{
-				Type: graphql.NewNonNull(graphql.String),
+				Type: graphql.String,
+			},
+			"status": &graphql.ArgumentConfig{
+				Type: enums.GetStatusEnumType(),
 			},
 		},
 		Resolve: resolver.UpdateUser,
