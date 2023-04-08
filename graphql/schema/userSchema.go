@@ -83,7 +83,7 @@ func UpdateUser() *graphql.Field {
 
 func DeleteUser() *graphql.Field {
 	return &graphql.Field{
-		Type: types.UserType,
+		Type: types.DeleteType,
 		Args: graphql.FieldConfigArgument{
 			"id": &graphql.ArgumentConfig{
 				Type: graphql.NewNonNull(graphql.Int),

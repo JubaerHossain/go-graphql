@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"lms/database"
-	"lms/graphql/validate"
+	"lms/gosql"
+	validation "lms/graphql/validate"
 	"lms/model"
 	"lms/utils"
 	"reflect"
-	"lms/gosql"
 
 	"github.com/graphql-go/graphql"
 )
@@ -63,7 +63,7 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	status, _ := params.Args["status"].(string)
 	userInput := model.User{
 		Name:   name,
-		Phone: phone,
+		Phone:  phone,
 		Status: status,
 	}
 	validationErrors := validation.ValidateUserUpdate(userInput)
@@ -84,19 +84,12 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 }
 
 func DeleteUser(params graphql.ResolveParams) (interface{}, error) {
-	id, ok := params.Args["id"].(int)
-	if ok {
-		stmt, err := database.DB.Prepare("DELETE FROM users WHERE id = ?")
-		if err != nil {
-			return nil, err
-		}
-		_, err = stmt.Exec(id)
-		if err != nil {
-			return nil, err
-		}
 
-		return id, nil
+	response, err := gosql.DeleteModel(reflect.TypeOf(model.User{}), "users", params, database.DB)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	return response, nil
+
 }
