@@ -76,7 +76,6 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 	}
 	user, err := gosql.UpdateModel(reflect.TypeOf(model.User{}), "users", params, userInput, database.DB)
 	if err != nil {
-		fmt.Println(err)
 		return nil, errors.New("failed to update user")
 	}
 
@@ -85,9 +84,14 @@ func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
 
 func DeleteUser(params graphql.ResolveParams) (interface{}, error) {
 
-	response, err := gosql.DeleteModel(reflect.TypeOf(model.User{}), "users", params, database.DB)
+	_, err := gosql.DeleteModel(reflect.TypeOf(model.User{}), "users", params, database.DB)
 	if err != nil {
 		return nil, err
+	}
+
+	response := map[string]string{
+		"status": "true",
+		"message": "user deleted successfully",
 	}
 
 	return response, nil
