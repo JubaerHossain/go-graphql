@@ -122,9 +122,8 @@ func QueryModel(modelType reflect.Type, modelName string, params graphql.Resolve
 
 func FindByID(modelType reflect.Type, modelName string, params graphql.ResolveParams, db *sql.DB) (interface{}, error) {
 	fmt.Println("from find id")
-	fmt.Println(params.Args)
 
-	fmt.Println(params.Args["id"])
+	fmt.Println(GetColumns(params))
 
 	// Get the query parameters
 	id, ok := params.Args["id"]
@@ -138,6 +137,8 @@ func FindByID(modelType reflect.Type, modelName string, params graphql.ResolvePa
 	row := db.QueryRow(sql)
 	// Create a new model instance
 	model := reflect.New(modelType).Interface()
+
+	fmt.Println(model)
 
 	// Get a list of pointers to the fields in the model struct
 	columns, err := ModelColumn(selectColumn, model)
@@ -173,16 +174,9 @@ func QueryModelCount(modelName string, params graphql.ResolveParams, db *sql.DB)
 	return count, nil
 }
 
-func CreateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, db *sql.DB) (interface{}, error) {
+func CreateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, modelMap map[string]interface{}, db *sql.DB) (interface{}, error) {
 
-	// Get the model data from the GraphQL params
-	model := params.Args["model"]
-
-	// Convert the model data to a map
-	modelMap, ok := model.(map[string]interface{})
-	if !ok {
-		return nil, errors.New("invalid model")
-	}
+	fmt.Println("from create model")
 
 	// Create a slice to hold the field names and a slice to hold the field values
 	var fields []string
@@ -221,16 +215,9 @@ func CreateModel(modelType reflect.Type, modelName string, params graphql.Resolv
 		return nil, errors.New(err.Error())
 	}
 
-	// Add the ID to the params map
-	params.Args["id"] = id
-	delete(params.Args, "model")
+	modelMap["id"] = id
 
-	fmt.Println(modelName)
-
-	fmt.Println(model)
-
-	// Return the newly created model data
-	return FindByID(modelType, modelName, params, db)
+	return modelMap, nil
 }
 
 func UpdateModel(modelType reflect.Type, modelName string, params graphql.ResolveParams, db *sql.DB) (interface{}, error) {

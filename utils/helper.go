@@ -76,6 +76,25 @@ func StructToMap(obj interface{}) map[string]interface{} {
 	return values
 }
 
+func MapToStruct(data map[string]interface{}, resultType reflect.Type) interface{} {
+	result := reflect.New(resultType).Elem()
+	for key, value := range data {
+		field := result.FieldByName(key)
+		if !field.IsValid() {
+			continue
+		}
+		if !field.CanSet() {
+			continue
+		}
+		fieldValue := reflect.ValueOf(value)
+		if field.Type() != fieldValue.Type() {
+			continue
+		}
+		field.Set(fieldValue)
+	}
+	return result.Interface()
+}
+
 func SetStructField(s interface{}, name string, value interface{}) error {
 	v := reflect.ValueOf(s).Elem()
 	f := v.FieldByName(name)

@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"lms/database"
+	"lms/gosql"
 	"lms/graphql/validation"
 	"lms/model"
 	"lms/utils"
 	"reflect"
-	"lms/gosql"
+
 	"github.com/graphql-go/graphql"
 )
 
@@ -50,21 +51,19 @@ func CreateUser(params graphql.ResolveParams) (interface{}, error) {
 	}
 	userInput.Password = hash
 	userInputMap := utils.StructToMap(userInput)
-	user, err := gosql.CreateModel(reflect.TypeOf(model.User{}), "users", graphql.ResolveParams{
-		Args: map[string]interface{}{
-			"model": userInputMap,
-		},
-	}, database.DB)
-
-	
-	fmt.Println(reflect.TypeOf(user))
+	user, err := gosql.CreateModel(reflect.TypeOf(model.User{}), "users", params, userInputMap, database.DB)
 
 	if err != nil {
 		fmt.Println(err)
 		return nil, errors.New("failed to create user")
 	}
+	userMap, ok := user.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("failed to convert user to map")
+	}
 
-	return user, nil
+	userResponse := utils.MapToStruct(userMap, reflect.TypeOf(model.User{}))
+	return userResponse, nil
 }
 
 func UpdateUser(params graphql.ResolveParams) (interface{}, error) {
