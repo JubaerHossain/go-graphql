@@ -29,6 +29,7 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 		"createCourse": CreateCourse(), // Use the shorthand syntax to define the fields.
 		"updateCourse": UpdateCourse(), // Use the shorthand syntax to define the fields.
 		"deleteCourse": DeleteCourse(), // Use the shorthand syntax to define the fields.
+		"login":        Login(),        // Use the shorthand syntax to define the fields.
 
 	},
 })
