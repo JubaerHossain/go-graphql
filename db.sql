@@ -8,6 +8,16 @@ CREATE TABLE  IF NOT EXISTS  users (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- //user_id, token, expiration_time
+CREATE TABLE IF NOT EXISTS refresh_tokens(
+    id INT PRIMARY KEY auto_increment,
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expiration_time DATETIME NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 
 -- create course DATABASE
 CREATE TABLE IF NOT EXISTS courses(

@@ -1,6 +1,7 @@
 package gosql
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -307,14 +308,21 @@ func DeleteModel(modelType reflect.Type, modelName string, params graphql.Resolv
 }
 
 func WhereModel(modelType reflect.Type, tableName string, params graphql.ResolveParams, where map[string]interface{}, db *sql.DB) (interface{}, error) {
-
 	// Build the SQL query string
 	selectColumn := GetColumns(params)
 	whereClause, whereArgs := BuildWhereClause(where)
 	sql := fmt.Sprintf("SELECT %s FROM %s WHERE %s;", selectColumn, tableName, whereClause)
 
-	// Execute the query
-	rows, err := db.Query(sql, whereArgs...)
+	// Prepare the statement
+	stmt, err := db.Prepare(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// Execute the query with context
+	ctx := context.Background()
+	rows, err := stmt.QueryContext(ctx, whereArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -346,4 +354,45 @@ func WhereModel(modelType reflect.Type, tableName string, params graphql.Resolve
 
 	// Convert the models slice to an interface{} and return it
 	return models.Interface(), nil
+}
+
+func RawInsertModel(tableName string, data map[string]interface{}, db *sql.DB) (int64, error) {
+	// Create a slice to hold the field names and a slice to hold the field values
+	var fields []string
+	var values []interface{}
+
+	// Loop through the data map and add the keys to the fields slice and the values to the values slice
+	for key, value := range data {
+		fields = append(fields, key)
+		values = append(values, value)
+	}
+
+	// Build the SQL query string
+	fieldString := strings.Join(fields, ",")
+	valueString := strings.Repeat("?,", len(fields))
+	valueString = valueString[:len(valueString)-1]
+	sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s);", tableName, fieldString, valueString)
+
+	// Execute the query
+	result, err := db.Exec(sql, values...)
+	if err != nil {
+		return 0, errors.New(err.Error())
+	}
+
+	// Get the number of rows affected by the query
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.New(err.Error())
+	}
+
+	if rowsAffected == 0 {
+		return 0, errors.New("failed to insert model")
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, errors.New(err.Error())
+	}
+
+	return id, nil
 }
