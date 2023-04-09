@@ -10,7 +10,11 @@ import (
 
 func Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("middleware")
 		tokenString := r.Header.Get("Authorization")
+
+		fmt.Println(tokenString)
+		fmt.Println("tokenString")
 		if tokenString == "" {
 			http.Error(w, "Authorization header required", http.StatusUnauthorized)
 			return

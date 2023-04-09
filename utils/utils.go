@@ -6,6 +6,7 @@ import (
 	"lms/database"
 	"lms/gosql"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,13 +65,66 @@ func GenerateRefreshToken(userID int) (string, error) {
 		"expiration_time": expirationTime.Format("2006-01-02 15:04:05"),
 	}
 
+	where := make(map[string]interface{})
+	where["user_id"] = userID
+
 	// Call the RawInsertModel function to insert the data
-	_, err := gosql.RawInsertModel("refresh_tokens", data, database.DB)
+	_, err := gosql.RawInsertUpdateModel("refresh_tokens", data, where, database.DB)
 	if err != nil {
 		return "", err
 	}
 
 	return refreshToken, nil
+}
+
+func ValidateRefreshToken(tokenString string) (int, error) {
+	// Parse the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Check the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("invalid token signing method")
+		}
+		// Return the secret key for verification
+		return []byte("my_secret_key"), nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse refresh token: %s", err.Error())
+	}
+
+	// Verify the token
+	if !token.Valid {
+		return 0, fmt.Errorf("invalid refresh token")
+	}
+
+	// Extract the user ID from the token claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, fmt.Errorf("invalid token claims")
+	}
+	userId, ok := claims["sub"].(string)
+	if !ok {
+		return 0, fmt.Errorf("invalid user ID in token claims")
+	}
+	userIdInt, err := strconv.Atoi(userId)
+	if err != nil {
+		return 0, fmt.Errorf("invalid user ID in token claims")
+	}
+
+	return userIdInt, nil
+}
+
+func DeleteRefreshToken(refreshToken string) error {
+	// Get the Redis client from the Redis pool
+	client := pool.Get()
+	defer client.Close()
+
+	// Delete the refresh token from Redis
+	_, err := client.Do("DEL", refreshToken).Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func ToString(data interface{}) string {
