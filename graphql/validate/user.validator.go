@@ -106,3 +106,27 @@ func ValidateUserUpdate(user model.User) []validation.ValidationErrorItem {
 
 	return validation.Validate(user, rules)
 }
+
+func ValidateLogin(user model.User) []validation.ValidationErrorItem {
+
+	rules := []validation.ValidationRule{
+		{
+			Field:       "phone",
+			Description: "Phone",
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
+				validation.PhoneValidation,
+			},
+		},
+		{
+			Field:       "password",
+			Description: "Password",
+			Validations: []func(interface{}) validation.ValidationErrorItem{
+				validation.RequiredValidation,
+				validation.MinLengthValidation(6),
+			},
+		},
+	}
+
+	return validation.Validate(user, rules)
+}

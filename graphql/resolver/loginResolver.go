@@ -2,11 +2,13 @@ package resolver
 
 import (
 	"errors"
+	"fmt"
 	"lms/database"
 	"lms/gosql"
-	"reflect"
+	validation "lms/graphql/validate"
 	"lms/model"
 	"lms/utils"
+	"reflect"
 
 	"github.com/graphql-go/graphql"
 )
@@ -14,16 +16,32 @@ import (
 func Login(params graphql.ResolveParams) (interface{}, error) {
 	phone := params.Args["phone"].(string)
 	password := params.Args["password"].(string)
-
 	// Prepare the WHERE clause
 	where := make(map[string]interface{})
 	where["phone"] = phone
 
+	loginInput := model.User{
+		Phone:   phone,
+		Password: password,
+	}
+	validationErrors := validation.ValidateLogin(loginInput)
+	if validationErrors != nil {
+		var errorMsgs []string
+		for _, validationErr := range validationErrors {
+			errorMsgs = append(errorMsgs, validationErr.Field+" : "+validationErr.Message)
+		}
+		return nil, fmt.Errorf("%s", errorMsgs)
+	}
 	// Query the user by phone number
-	users, err := gosql.WhereModel(reflect.TypeOf(model.User{}), "users", params, where, database.DB)
+	selectColumn := []string{"id", "phone", "password"}
+	users, err := gosql.FindAllModel(reflect.TypeOf(model.User{}), "users", where, selectColumn, database.DB)
 	if err != nil {
+		fmt.Println("err")
+		fmt.Println(err)
 		return nil, err
 	}
+
+	fmt.Println(users)
 
 	// Check if the user exists
 	if reflect.ValueOf(users).Len() == 0 {
@@ -56,4 +74,3 @@ func Login(params graphql.ResolveParams) (interface{}, error) {
 	}
 	return auth, nil
 }
-
