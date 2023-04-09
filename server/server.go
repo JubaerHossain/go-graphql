@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"lms/graphql/schema"
+	"lms/middleware"
 	"lms/routes"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"lms/database"
 
 	"github.com/graphql-go/handler"
+	"github.com/rs/cors"
 )
 
 func Start() {
@@ -27,7 +29,9 @@ func Start() {
 	APP_PORT := os.Getenv("APP_PORT")
 	APP_URL := os.Getenv("APP_URL")
 
-	http.Handle("/graphql", h)
+	handler := cors.Default().Handler(h)
+
+	http.Handle("/graphql", middleware.Authenticate(handler))
 	routes.Init()
 	fmt.Println("Server is running on port " + APP_PORT)
 	fmt.Println("Access GraphiQL at " + APP_URL + ":" + APP_PORT + "/graphql")

@@ -13,3 +13,5 @@ require (
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.7.0
 )
+
+require github.com/rs/cors v1.8.3 // indirect
